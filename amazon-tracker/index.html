@@ -53,6 +53,10 @@ header.top{display:flex;justify-content:space-between;align-items:flex-end;gap:2
 .nw-toggle button{border:none;background:var(--paper);color:var(--ink-soft);font-size:10.5px;font-weight:700;padding:3px 9px;cursor:pointer;}
 .nw-toggle button.active.need{background:var(--need);color:#fff;}
 .nw-toggle button.active.want{background:var(--want);color:#fff;}
+.nw-toggle.small button{padding:2px 6px;font-size:9.5px;}
+.meter{display:flex;height:9px;border-radius:5px;overflow:hidden;background:#eee;width:150px;}
+.meter-need{background:var(--need);}
+.meter-want{background:var(--want);}
 .clickable-row{cursor:pointer;}
 .clickable-row:hover{text-decoration:underline;}
 .search-input{width:100%;padding:11px 14px;font-family:var(--sans);font-size:14.5px;border:1.5px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink);margin-bottom:14px;}
@@ -132,13 +136,22 @@ footer.notes h3{font-family:var(--serif);font-size:15px;color:var(--ink);margin:
 
   <section class="card">
     <h2>Need or Want, by category</h2>
-    <p class="desc">Starting guesses only, flip any category and the totals above update live. This is the fastest way to see the real discretionary share of your Amazon spend.</p>
+    <p class="desc">Each bar below is a meter: how much of that category, by dollar, is tagged need versus want right now. Tagging happens item by item in the list below, "Set all" here just resets an entire category back to one tag and clears any individual overrides in it.</p>
     <div id="catToggleTable"></div>
   </section>
 
   <section class="card" id="ledgerSection">
     <h2>Every Purchase</h2>
+    <p class="desc">Tag each item need or want directly, it's the two small buttons on every row. Individual tags always win over the category default.</p>
     <input type="text" class="search-input" id="searchInput" placeholder="Search by product name...">
+    <div style="margin-bottom:12px;">
+      <span style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-right:8px;">Show:</span>
+      <div class="nw-toggle" id="tagFilterSeg">
+        <button class="active" data-tagfilter="all">All</button>
+        <button data-tagfilter="need">Need only</button>
+        <button data-tagfilter="want">Want only</button>
+      </div>
+    </div>
     <div id="activeFilterBar" style="margin-bottom:8px;font-size:12.5px;color:var(--ink-soft);"></div>
     <div class="table-toolbar">
       <span id="tableCount"></span>
@@ -150,6 +163,7 @@ footer.notes h3{font-family:var(--serif);font-size:15px;color:var(--ink);margin:
           <th data-sort="date">Date</th>
           <th data-sort="product">Product</th>
           <th data-sort="category">Category</th>
+          <th>Tag</th>
           <th data-sort="quantity">Qty</th>
           <th data-sort="amount">Amount</th>
         </tr></thead>
@@ -194,12 +208,40 @@ var ITEMS = AMAZON_DATA.items;
 var META = AMAZON_DATA.meta;
 ITEMS.forEach(function(i){ i.month = i.date.slice(0,7); });
 
-var state = { search:'', catFilter:null, sortCol:'date', sortDir:'desc', page:0, pageSize:60 };
+var state = { search:'', catFilter:null, tagFilter:'all', sortCol:'date', sortDir:'desc', page:0, pageSize:60, itemTagOverride:{} };
 var charts = {};
+
+function effectiveTag(item){
+  if (Object.prototype.hasOwnProperty.call(state.itemTagOverride, item.id)) return state.itemTagOverride[item.id];
+  return catTag[item.category] || 'want';
+}
+function setItemTag(id, tag){
+  state.itemTagOverride[id] = tag;
+  renderAll();
+}
+function setCategoryTagBulk(cat, tag){
+  catTag[cat] = tag;
+  ITEMS.forEach(function(i){ if (i.category === cat) delete state.itemTagOverride[i.id]; });
+  renderAll();
+}
 
 document.getElementById('genDate').textContent = new Date().toLocaleDateString();
 
 function filteredItems(){
+  return ITEMS.filter(function(i){
+    if (state.catFilter && i.category !== state.catFilter) return false;
+    if (state.tagFilter !== 'all' && effectiveTag(i) !== state.tagFilter) return false;
+    if (state.search){
+      var q = state.search.trim().toLowerCase();
+      if (q && i.product.toLowerCase().indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+}
+// Same as filteredItems but ignores the need/want filter, used by the category
+// chart and meter table, which should always show the true split, not collapse
+// to one side just because the table below is currently filtered to one tag.
+function categoryScopedItems(){
   return ITEMS.filter(function(i){
     if (state.catFilter && i.category !== state.catFilter) return false;
     if (state.search){
@@ -227,12 +269,11 @@ function renderNeedWant(){
   var tx = filteredItems();
   var need = 0, want = 0, needN = 0, wantN = 0;
   tx.forEach(function(i){
-    var tag = catTag[i.category] || 'want';
-    if (tag === 'need'){ need += i.amount; needN++; } else { want += i.amount; wantN++; }
+    if (effectiveTag(i) === 'need'){ need += i.amount; needN++; } else { want += i.amount; wantN++; }
   });
   var total = need + want || 1;
   document.getElementById('needVal').textContent = fmtUSD(need);
-  document.getElementById('needSub').textContent = needN + ' items, ' + Math.round(need/total*100) + '% of spend shown';
+  document.getElementById('needSub').textContent = needN + ' items, ' + Math.round(need/total*100) + '% of spend shown, this is what it costs to cover your actual needs';
   document.getElementById('wantVal').textContent = fmtUSD(want);
   document.getElementById('wantSub').textContent = wantN + ' items, ' + Math.round(want/total*100) + '% of spend shown';
 }
@@ -260,19 +301,32 @@ function renderTrendChart(){
 
 var lastCatData = [];
 function renderCatChart(){
-  var tx = filteredItems();
+  var tx = categoryScopedItems();
   var byCat = {};
-  tx.forEach(function(i){ byCat[i.category] = (byCat[i.category]||0) + i.amount; });
-  var cats = Object.keys(byCat).map(function(c){ return {category:c, total:round2(byCat[c])}; }).sort(function(a,b){return b.total-a.total;});
+  tx.forEach(function(i){
+    if (!byCat[i.category]) byCat[i.category] = {need:0, want:0, needN:0, wantN:0};
+    var c = byCat[i.category];
+    if (effectiveTag(i) === 'need'){ c.need += i.amount; c.needN++; } else { c.want += i.amount; c.wantN++; }
+  });
+  var cats = Object.keys(byCat).map(function(c){
+    return { category:c, need:round2(byCat[c].need), want:round2(byCat[c].want), needN:byCat[c].needN, wantN:byCat[c].wantN, total:round2(byCat[c].need+byCat[c].want) };
+  }).sort(function(a,b){ return b.total-a.total; });
   lastCatData = cats;
-  var colors = cats.map(function(c){ return (catTag[c.category]||'want')==='need' ? '#4F7A57' : '#B2790E'; });
   var ctx = document.getElementById('catChart').getContext('2d');
   if (charts.cat) charts.cat.destroy();
   charts.cat = new Chart(ctx, {
     type:'bar',
-    data:{ labels: cats.map(function(c){return c.category;}), datasets:[{ data: cats.map(function(c){return c.total;}), backgroundColor: colors, borderRadius:3, barThickness:12 }] },
+    data:{
+      labels: cats.map(function(c){return c.category;}),
+      datasets:[
+        { label:'Need', data: cats.map(function(c){return c.need;}), backgroundColor:'#4F7A57', borderRadius:3 },
+        { label:'Want', data: cats.map(function(c){return c.want;}), backgroundColor:'#B2790E', borderRadius:3 }
+      ]
+    },
     options:{
       indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      scales:{ x:{ stacked:true, beginAtZero:true, ticks:{ callback:function(v){return fmtUSD(v);}, font:{family:'IBM Plex Mono', size:10} }, grid:{color:'#E6E7E1'} },
+               y:{ stacked:true, ticks:{ font:{family:'Inter', size:10.5} }, grid:{display:false} } },
       onClick:function(evt, elements){
         if (!elements.length) return;
         var cat = cats[elements[0].index].category;
@@ -281,39 +335,42 @@ function renderCatChart(){
         renderAll();
       },
       onHover:function(evt, elements){ evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; },
-      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label:function(c){ return fmtUSD2(c.parsed.x)+' (click to filter)'; } } } },
-      scales:{
-        x:{ beginAtZero:true, ticks:{ callback:function(v){return fmtUSD(v);}, font:{family:'IBM Plex Mono', size:10} }, grid:{color:'#E6E7E1'} },
-        y:{ ticks:{ font:{family:'Inter', size:10.5} }, grid:{display:false} }
-      }
+      plugins:{ legend:{position:'top', labels:{usePointStyle:true, font:{family:'Inter', size:11}}}, tooltip:{ callbacks:{ label:function(c){ return c.dataset.label+': '+fmtUSD2(c.parsed.x)+' (click bar to filter)'; } } } },
     }
   });
 }
 
-function toggleCatTag(cat, tag){
-  catTag[cat] = tag;
-  renderAll();
-}
 
 function renderCatToggleTable(){
   var byCat = {};
   ITEMS.forEach(function(i){
-    if (!byCat[i.category]) byCat[i.category] = {total:0,count:0};
-    byCat[i.category].total += i.amount; byCat[i.category].count += 1;
+    if (!byCat[i.category]) byCat[i.category] = {need:0, want:0, needN:0, wantN:0, total:0, count:0};
+    var c = byCat[i.category];
+    c.total += i.amount; c.count += 1;
+    if (effectiveTag(i) === 'need'){ c.need += i.amount; c.needN++; } else { c.want += i.amount; c.wantN++; }
   });
-  var cats = Object.keys(byCat).map(function(c){ return {category:c, total:round2(byCat[c].total), count:byCat[c].count}; }).sort(function(a,b){return b.total-a.total;});
-  var html = '<table class="cat-table"><thead><tr><th>Category</th><th style="text-align:right;">Total</th><th style="text-align:right;">Items</th><th>Tag</th></tr></thead><tbody>';
+  var cats = Object.keys(byCat).map(function(c){
+    var d = byCat[c];
+    return { category:c, total:round2(d.total), count:d.count, need:round2(d.need), want:round2(d.want), needN:d.needN, wantN:d.wantN };
+  }).sort(function(a,b){ return b.total-a.total; });
+
+  var html = '<table class="cat-table"><thead><tr><th>Category</th><th style="text-align:right;">Total</th><th style="text-align:right;">Items</th><th style="width:160px;">Need / want split</th><th>Bulk set (only affects items you have not tagged individually)</th></tr></thead><tbody>';
   cats.forEach(function(c){
-    var tag = catTag[c.category] || 'want';
-    html += '<tr><td class="clickable-row" data-cat="'+escapeHtml(c.category)+'">'+escapeHtml(c.category)+'</td>' +
-      '<td class="n">'+fmtUSD2(c.total)+'</td><td class="n">'+c.count+'</td>' +
-      '<td><div class="nw-toggle"><button class="'+(tag==='need'?'active need':'')+'" data-cat="'+escapeHtml(c.category)+'" data-tag="need">NEED</button>' +
-      '<button class="'+(tag==='want'?'active want':'')+'" data-cat="'+escapeHtml(c.category)+'" data-tag="want">WANT</button></div></td></tr>';
+    var needPct = c.total ? Math.round(c.need/c.total*100) : 0;
+    var defaultTag = catTag[c.category] || 'want';
+    html += '<tr>' +
+      '<td class="clickable-row" data-cat="'+escapeHtml(c.category)+'">'+escapeHtml(c.category)+'</td>' +
+      '<td class="n">'+fmtUSD2(c.total)+'</td>' +
+      '<td class="n">'+c.count+'</td>' +
+      '<td><div class="meter" title="'+needPct+'% need by dollar"><div class="meter-need" style="width:'+needPct+'%"></div><div class="meter-want" style="width:'+(100-needPct)+'%"></div></div>' +
+      '<div style="font-size:10.5px;color:var(--ink-soft);margin-top:2px;">'+c.needN+' need &middot; '+c.wantN+' want</div></td>' +
+      '<td><div class="nw-toggle"><button class="'+(defaultTag==='need'?'active need':'')+'" data-cat="'+escapeHtml(c.category)+'" data-tag="need">Set all NEED</button>' +
+      '<button class="'+(defaultTag==='want'?'active want':'')+'" data-cat="'+escapeHtml(c.category)+'" data-tag="want">Set all WANT</button></div></td></tr>';
   });
   html += '</tbody></table>';
   document.getElementById('catToggleTable').innerHTML = html;
   document.querySelectorAll('#catToggleTable .nw-toggle button').forEach(function(btn){
-    btn.addEventListener('click', function(){ toggleCatTag(btn.getAttribute('data-cat'), btn.getAttribute('data-tag')); });
+    btn.addEventListener('click', function(){ setCategoryTagBulk(btn.getAttribute('data-cat'), btn.getAttribute('data-tag')); });
   });
   document.querySelectorAll('#catToggleTable .clickable-row').forEach(function(cell){
     cell.addEventListener('click', function(){
@@ -330,13 +387,17 @@ function renderActiveFilterBar(){
   var el = document.getElementById('activeFilterBar');
   var parts = [];
   if (state.catFilter) parts.push('Category: <strong>'+escapeHtml(state.catFilter)+'</strong>');
+  if (state.tagFilter !== 'all') parts.push('Showing: <strong>'+state.tagFilter+' only</strong>');
   if (state.search.trim()) parts.push('Search: "'+escapeHtml(state.search.trim())+'"');
+  var overrideCount = Object.keys(state.itemTagOverride).length;
+  if (overrideCount) parts.push(overrideCount + ' item(s) individually tagged');
   if (!parts.length){ el.innerHTML = ''; return; }
-  el.innerHTML = parts.join(' &middot; ') + ' <button class="report-btn" style="padding:2px 9px;font-size:11px;" onclick="clearFilters()">Clear</button>';
+  el.innerHTML = parts.join(' &middot; ') + ' <button class="report-btn" style="padding:2px 9px;font-size:11px;" onclick="clearFilters()">Clear filters</button>';
 }
 function clearFilters(){
-  state.catFilter = null; state.search = ''; state.page = 0;
+  state.catFilter = null; state.search = ''; state.tagFilter = 'all'; state.page = 0;
   document.getElementById('searchInput').value = '';
+  document.querySelectorAll('#tagFilterSeg button').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-tagfilter')==='all'); });
   renderAll();
 }
 
@@ -363,17 +424,23 @@ function renderTable(){
 
   var html = '';
   pageRows.forEach(function(i){
-    var tag = catTag[i.category] || 'want';
+    var tag = effectiveTag(i);
+    var isOverridden = Object.prototype.hasOwnProperty.call(state.itemTagOverride, i.id);
     html += '<tr>' +
       '<td class="dt">'+fmtDate(i.date)+'</td>' +
-      '<td class="prod">'+escapeHtml(i.product)+'</td>' +
-      '<td><span class="badge '+tag+'">'+tag+'</span> '+escapeHtml(i.category)+'</td>' +
+      '<td class="prod">'+escapeHtml(i.product)+(isOverridden?' <span style="font-size:9.5px;color:var(--ink-soft);">(custom)</span>':'')+'</td>' +
+      '<td>'+escapeHtml(i.category)+'</td>' +
+      '<td><div class="nw-toggle small"><button class="'+(tag==='need'?'active need':'')+'" data-id="'+i.id+'" data-tag="need">Need</button>' +
+      '<button class="'+(tag==='want'?'active want':'')+'" data-id="'+i.id+'" data-tag="want">Want</button></div></td>' +
       '<td class="amt">'+i.quantity+'</td>' +
       '<td class="amt">'+fmtUSD2(i.amount)+'</td></tr>';
   });
   document.getElementById('ledgerBody').innerHTML = html;
   document.getElementById('ledgerFoot').innerHTML =
-    '<tr><td colspan="4" style="text-align:right;">Total, all filtered items ('+total.toLocaleString()+')</td><td class="amt">'+fmtUSD2(round2(fullTotal))+'</td></tr>';
+    '<tr><td colspan="5" style="text-align:right;">Total, all filtered items ('+total.toLocaleString()+')</td><td class="amt">'+fmtUSD2(round2(fullTotal))+'</td></tr>';
+  document.querySelectorAll('#ledgerBody .nw-toggle button').forEach(function(btn){
+    btn.addEventListener('click', function(){ setItemTag(parseInt(btn.getAttribute('data-id'),10), btn.getAttribute('data-tag')); });
+  });
 
   renderActiveFilterBar();
 }
@@ -390,6 +457,15 @@ function renderAll(){
 document.getElementById('searchInput').addEventListener('input', function(e){
   state.search = e.target.value; state.page = 0; renderAll();
 });
+document.getElementById('tagFilterSeg').addEventListener('click', function(e){
+  var btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#tagFilterSeg button').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  state.tagFilter = btn.getAttribute('data-tagfilter');
+  state.page = 0;
+  renderAll();
+});
 document.getElementById('prevPage').addEventListener('click', function(){ state.page--; renderTable(); });
 document.getElementById('nextPage').addEventListener('click', function(){ state.page++; renderTable(); });
 document.querySelectorAll('#ledgerTable thead th').forEach(function(th){
@@ -405,14 +481,15 @@ function printReport(){
   var tx = filteredItems().slice().sort(function(a,b){ return a.date<b.date?-1:1; });
   var total = round2(tx.reduce(function(s,i){return s+i.amount;},0));
   var need=0,want=0;
-  tx.forEach(function(i){ if ((catTag[i.category]||'want')==='need') need+=i.amount; else want+=i.amount; });
+  tx.forEach(function(i){ if (effectiveTag(i)==='need') need+=i.amount; else want+=i.amount; });
   var html = '<h1>Amazon Purchase Analysis</h1>';
   html += '<p style="font-size:11px;color:#555;">Generated '+new Date().toLocaleDateString()+'. '+tx.length+' items, '+fmtUSD2(total)+' total. Household needs: '+fmtUSD2(round2(need))+'. Discretionary/wants: '+fmtUSD2(round2(want))+'.</p>';
   if (state.catFilter) html += '<p style="font-size:11px;"><strong>Filtered to category:</strong> '+escapeHtml(state.catFilter)+'</p>';
+  if (state.tagFilter !== 'all') html += '<p style="font-size:11px;"><strong>Showing:</strong> '+state.tagFilter+' only</p>';
   if (state.search.trim()) html += '<p style="font-size:11px;"><strong>Filtered to search:</strong> "'+escapeHtml(state.search.trim())+'"</p>';
   html += '<table><thead><tr><th>Date</th><th>Product</th><th>Category</th><th>Tag</th><th class="amt">Qty</th><th class="amt">Amount</th></tr></thead><tbody>';
   tx.forEach(function(i){
-    html += '<tr><td>'+fmtDate(i.date)+'</td><td>'+escapeHtml(i.product)+'</td><td>'+escapeHtml(i.category)+'</td><td>'+(catTag[i.category]||'want')+'</td><td class="amt">'+i.quantity+'</td><td class="amt">'+fmtUSD2(i.amount)+'</td></tr>';
+    html += '<tr><td>'+fmtDate(i.date)+'</td><td>'+escapeHtml(i.product)+'</td><td>'+escapeHtml(i.category)+'</td><td>'+effectiveTag(i)+'</td><td class="amt">'+i.quantity+'</td><td class="amt">'+fmtUSD2(i.amount)+'</td></tr>';
   });
   html += '<tr style="font-weight:700;"><td colspan="5" style="text-align:right;">Total</td><td class="amt">'+fmtUSD2(total)+'</td></tr>';
   html += '</tbody></table>';
