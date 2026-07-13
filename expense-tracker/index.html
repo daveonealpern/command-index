@@ -636,7 +636,7 @@ function fmtDate(iso){
 }
 
 /* ============================= state ============================= */
-var state = { entity:'all', necessity:'all', year:'all', vendorQuery:'', sortCol:'date', sortDir:'desc', page:0, pageSize:60, selectedCategory:null, selectedMonthKey:null, tableOverride:null, floorOverride:{'Realtor Dues':false}, floorExpanded:{} };
+var state = { entity:'all', necessity:'all', year:'all', vendorQuery:'', sortCol:'date', sortDir:'desc', page:0, pageSize:60, selectedCategory:null, selectedMonthKey:null, tableOverride:null, floorOverride:{'Realtor Dues':false}, floorExpanded:{}, customFloorItems:[] };
 var charts = {};
 
 function currentTx(){
@@ -1100,6 +1100,29 @@ function renderFloorCategoryRow(c){
   return row + renderFloorVendorRows(c);
 }
 
+function addCustomFloorItem(){
+  var labelEl = document.getElementById('customItemLabel');
+  var amtEl = document.getElementById('customItemAmount');
+  var label = (labelEl.value || '').trim();
+  var amount = parseFloat(amtEl.value);
+  if (!label || isNaN(amount) || amount <= 0){
+    alert('Enter a label and a positive dollar amount.');
+    return;
+  }
+  state.customFloorItems.push({ id: 'custom_' + Date.now(), label: label, amount: round2(amount), included: true });
+  labelEl.value = ''; amtEl.value = '';
+  renderFixedFloor();
+}
+function removeCustomFloorItem(id){
+  state.customFloorItems = state.customFloorItems.filter(function(c){ return c.id !== id; });
+  renderFixedFloor();
+}
+function toggleCustomFloorItem(id){
+  var item = state.customFloorItems.filter(function(c){ return c.id === id; })[0];
+  if (item) item.included = !item.included;
+  renderFixedFloor();
+}
+
 function renderFixedFloor(){
   if (!DEBT) return;
   var months = floorMonthsForYear(state.year);
@@ -1121,7 +1144,8 @@ function renderFixedFloor(){
   var inLoans = loanData.filter(function(l){ return l.included; });
   var outLoans = loanData.filter(function(l){ return !l.included; });
 
-  var totalFloor = inFloorCats.reduce(function(s,c){ return s+c.includedMonthly; }, 0) + inLoans.reduce(function(s,l){ return s+l.avgPrincipalPerMonth; }, 0);
+  var totalFloor = inFloorCats.reduce(function(s,c){ return s+c.includedMonthly; }, 0) + inLoans.reduce(function(s,l){ return s+l.avgPrincipalPerMonth; }, 0)
+    + state.customFloorItems.filter(function(c){ return c.included; }).reduce(function(s,c){ return s+c.amount; }, 0);
 
   document.getElementById('floorTotalVal').textContent = fmtUSD(totalFloor);
   document.getElementById('floorTotalSub').textContent = 'Your floor, ' + scopeLabel + '. ' + inFloorCats.length + ' categories and ' + inLoans.length + ' loan(s) counted; ' + outFloorCats.length + ' categories not counted, expand "Not in your floor" below to add specific items from them.';
@@ -1134,6 +1158,12 @@ function renderFixedFloor(){
     html += '<tr><td></td><td><input type="checkbox" class="floor-check-loan" data-loankey="' + l.key + '" checked></td>' +
       '<td class="clickable-row" data-loankey="' + l.key + '"><span class="tag-dot" style="background:var(--flag-red)"></span>' + escapeHtml(l.entity + ' \u2014 ' + l.label + ' (loan principal)') + '</td>' +
       '<td class="n">' + fmtUSD2(l.avgPrincipalPerMonth) + '</td></tr>';
+  });
+  state.customFloorItems.forEach(function(c){
+    html += '<tr><td><button class="floor-expand" onclick="removeCustomFloorItem(\'' + c.id + '\')" title="Remove">\u2715</button></td>' +
+      '<td><input type="checkbox" class="floor-check-custom" data-customid="' + c.id + '" ' + (c.included?'checked':'') + '></td>' +
+      '<td><span class="tag-dot" style="background:var(--accent)"></span>' + escapeHtml(c.label) + ' <span class="badge itemized">manual</span></td>' +
+      '<td class="n">' + fmtUSD2(c.amount) + '</td></tr>';
   });
   html += '<tr style="font-weight:700;border-top:2px solid var(--ink);"><td></td><td></td><td>Your fixed floor</td><td class="n">' + fmtUSD2(round2(totalFloor)) + '</td></tr>';
   html += '</tbody></table>';
@@ -1152,11 +1182,20 @@ function renderFixedFloor(){
     html += '</tbody></table>';
   }
 
+  html += '<div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line-soft);">' +
+    '<div style="font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">Add a line manually (e.g. a figure from the Amazon Purchase Analysis report)</div>' +
+    '<input type="text" id="customItemLabel" placeholder="Label, e.g. Amazon household needs" style="padding:8px 10px;border:1.5px solid var(--line);border-radius:6px;font-family:var(--sans);font-size:13px;width:280px;margin-right:8px;">' +
+    '<input type="number" id="customItemAmount" placeholder="$ / month" step="0.01" style="padding:8px 10px;border:1.5px solid var(--line);border-radius:6px;font-family:var(--mono);font-size:13px;width:120px;margin-right:8px;">' +
+    '<button class="report-btn" onclick="addCustomFloorItem()">Add to floor</button></div>';
+
   html += '<div style="margin-top:12px;"><button class="report-btn" onclick="floorSelectAll()">Include everything</button> ' +
     '<button class="report-btn" onclick="resetFloorDefaults()">Reset to default (essential categories + active loans, minus Realtor Dues)</button></div>' +
     '<div id="floorDetail"></div>';
   document.getElementById('floorBreakdown').innerHTML = html;
 
+  document.querySelectorAll('#floorBreakdown .floor-check-custom').forEach(function(box){
+    box.addEventListener('change', function(){ toggleCustomFloorItem(box.getAttribute('data-customid')); });
+  });
   document.querySelectorAll('#floorBreakdown .floor-check-cat').forEach(function(box){
     box.addEventListener('change', function(){ toggleFloorCategory(box.getAttribute('data-cat')); });
   });
@@ -1664,7 +1703,8 @@ function printBudgetReport(){
   var outFloorCats = catData.filter(function(c){ return c.includedTotal === 0; }).sort(function(a,b){ return b.fullMonthly - a.fullMonthly; });
   var inLoans = loanData.filter(function(l){ return l.included; });
   var outLoans = loanData.filter(function(l){ return !l.included; });
-  var totalFloor = round2(inFloorCats.reduce(function(s,c){ return s+c.includedMonthly; }, 0) + inLoans.reduce(function(s,l){ return s+l.avgPrincipalPerMonth; }, 0));
+  var inCustom = state.customFloorItems.filter(function(c){ return c.included; });
+  var totalFloor = round2(inFloorCats.reduce(function(s,c){ return s+c.includedMonthly; }, 0) + inLoans.reduce(function(s,l){ return s+l.avgPrincipalPerMonth; }, 0) + inCustom.reduce(function(s,c){ return s+c.amount; }, 0));
 
   var html = '<h1>Monthly Budget: Fixed Floor &amp; Debt Service</h1>';
   html += '<div class="print-meta">Generated ' + new Date().toLocaleDateString() + ' &middot; ' + scopeLabel + '</div>';
@@ -1678,6 +1718,9 @@ function printBudgetReport(){
   });
   inLoans.forEach(function(l){
     html += '<tr><td>' + escapeHtml(l.entity + ': ' + l.label) + '</td><td>loan principal</td><td class="amt">' + fmtUSD2(l.avgPrincipalPerMonth) + '</td></tr>';
+  });
+  inCustom.forEach(function(c){
+    html += '<tr><td>' + escapeHtml(c.label) + '</td><td>manually added</td><td class="amt">' + fmtUSD2(c.amount) + '</td></tr>';
   });
   html += '<tr style="font-weight:700;border-top:1px solid #333;"><td colspan="2">Total fixed floor</td><td class="amt">' + fmtUSD2(totalFloor) + '</td></tr>';
   html += '</tbody></table>';
