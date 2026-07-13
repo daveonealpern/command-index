@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Index Map | Dashboard Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0F2033;
+    --panel: #16293D;
+    --panel-hover: #1C3349;
+    --line: #33495D;
+    --line-bright: #6E93AC;
+    --grid-line: rgba(110, 147, 172, 0.06);
+    --paper: #E9EFF3;
+    --paper-dim: #93AAC0;
+    --brass: #C7A15C;
+    --radius: 2px;
+    --font-display: 'Playfair Display', Georgia, serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--ink);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 48px 48px;
+    color: var(--paper);
+    font-family: var(--font-body);
+    min-height: 100vh;
+  }
+
+  .page { max-width: 1180px; margin: 0 auto; padding: 56px 32px 80px; }
+
+  .title-block {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    flex-wrap: wrap;
+    border-bottom: 2px solid var(--line-bright);
+    padding-bottom: 28px;
+  }
+  .title-block .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brass);
+    margin: 0 0 10px;
+  }
+  .title-block h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(30px, 4vw, 44px);
+    margin: 0;
+    line-height: 1.1;
+    color: var(--paper);
+  }
+  .mark { flex-shrink: 0; }
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--paper-dim);
+    text-align: right;
+    line-height: 1.8;
+  }
+
+  .summary-line {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--paper-dim);
+    margin: 18px 0 32px;
+  }
+  .summary-line strong { color: var(--brass); font-weight: 500; }
+
+  .controls {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 40px;
+  }
+  .search-input {
+    flex: 1 1 240px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--paper);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    outline: none;
+    transition: border-color 150ms ease;
+  }
+  .search-input::placeholder { color: var(--paper-dim); }
+  .search-input:focus { border-color: var(--brass); }
+
+  .pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--paper-dim);
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+  }
+  .pill:hover { border-color: var(--line-bright); color: var(--paper); }
+  .pill.active { border-color: var(--brass); color: var(--brass); background: rgba(199, 161, 92, 0.08); }
+  .pill:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+
+  .book-section { margin-bottom: 48px; }
+  .book-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .book-heading .book-num {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--brass);
+  }
+  .book-heading h2 {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--paper);
+  }
+  .book-heading .book-note {
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--paper-dim);
+    margin-left: auto;
+  }
+
+  .parcel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 16px;
+  }
+  .parcel-card {
+    display: block;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+  }
+  .parcel-card:hover, .parcel-card:focus-visible {
+    border-color: var(--brass);
+    background: var(--panel-hover);
+    transform: translateY(-2px);
+    outline: none;
+  }
+  .parcel-card:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+  .parcel-index {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--brass);
+    margin-bottom: 10px;
+  }
+  .parcel-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 19px;
+    margin: 0 0 8px;
+    color: var(--paper);
+  }
+  .parcel-desc {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--paper-dim);
+    margin: 0 0 14px;
+  }
+  .parcel-tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--paper-dim);
+    border-top: 1px solid var(--line);
+    padding-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  .parcel-tag .open { color: var(--brass); white-space: nowrap; }
+  .parcel-tag .planned-label { color: var(--paper-dim); font-style: italic; white-space: nowrap; }
+  .parcel-card.is-planned { opacity: 0.55; cursor: default; }
+  .parcel-card.is-planned:hover {
+    transform: none;
+    border-color: var(--line);
+    background: var(--panel);
+  }
+
+  .empty-state {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--paper-dim);
+    padding: 40px 0;
+    border-top: 1px solid var(--line);
+  }
+  .empty-state button {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--brass);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 6px 12px;
+    margin-left: 10px;
+    cursor: pointer;
+    border-radius: var(--radius);
+  }
+  .empty-state button:hover { border-color: var(--brass); }
+
+  .hub-footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--paper-dim);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .parcel-card, .pill, .search-input { transition: none; }
+  }
+
+  @media (max-width: 560px) {
+    .page { padding: 32px 18px 60px; }
+    .title-block { flex-direction: column; align-items: flex-start; }
+    .meta { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="title-block">
+    <div>
+      <p class="eyebrow">Index Map No. 1</p>
+      <h1>Dashboard Sheet Index</h1>
+    </div>
+    <svg class="mark" width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="30" cy="32" r="15" stroke="#6E93AC" stroke-width="1"/>
+      <circle cx="30" cy="32" r="2.5" fill="#C7A15C"/>
+      <line x1="30" y1="10" x2="30" y2="17" stroke="#6E93AC" stroke-width="1"/>
+      <line x1="30" y1="47" x2="30" y2="54" stroke="#6E93AC" stroke-width="1"/>
+      <line x1="8" y1="32" x2="15" y2="32" stroke="#6E93AC" stroke-width="1"/>
+      <line x1="45" y1="32" x2="52" y2="32" stroke="#6E93AC" stroke-width="1"/>
+    </svg>
+    <div class="meta">
+      REV 2026.07.12<br>
+      PREPARED FOR D. ALPERN<br>
+      WARDEN MGMT / CLC
+    </div>
+  </header>
+
+  <p class="summary-line" id="count-line"></p>
+
+  <div class="controls">
+    <input type="text" id="search-input" class="search-input" placeholder="Find a sheet by name or keyword..." autocomplete="off" aria-label="Search dashboards">
+    <div class="pill-row" id="pill-row"></div>
+  </div>
+
+  <main id="hub-main"></main>
+
+  <footer class="hub-footer">
+    Add a new sheet by editing the PARCELS list near the bottom of this file. No redesign needed.
+  </footer>
+
+</div>
+
+<script>
+  // BOOKS groups parcels into sections. Add a new book by adding a key here.
+  const BOOKS = {
+    I:  { label: "Development & Deals", note: "CLC and Warden" },
+    II: { label: "Personal & Life Admin", note: "" }
+  };
+
+  // PARCELS is the list of dashboards. To add one, copy the template block
+  // at the bottom of this array and fill in the fields. That's the only
+  // edit required, the page rebuilds itself around it.
+  const PARCELS = [
+    {
+      index: "1.01",
+      book: "I",
+      title: "MHP Deal Screener",
+      description: "Live underwriting for prospective MHC and land acquisitions. Enter assumptions and get instant pro forma output.",
+      tag: "Self-contained, live recalculation",
+      url: "./mhp-deal-screener/index.html"
+    },
+    {
+      index: "1.02",
+      book: "I",
+      title: "6024 Cochran",
+      description: "Budget, entitlement countdowns, consultant tracking, and approvals for the Simi Valley subdivision.",
+      tag: "Google Sheets backend, shared with Gary",
+      url: "./6024-cochran/index.html"
+    },
+    {
+      index: "2.01",
+      book: "II",
+      title: "Amazon Tracker",
+      description: "Breaks down Amazon order history by category to track household spending.",
+      tag: "Personal",
+      url: "./amazon-tracker/index.html"
+    },
+    {
+      index: "2.02",
+      book: "II",
+      title: "Expense Tracker",
+      description: "Monthly budget tracking with income, expense priority, and a calendar view.",
+      tag: "Browser-stored",
+      url: "./expense-tracker/index.html"
+    },
+    {
+      index: "2.03",
+      book: "II",
+      title: "Triathlon Dashboard",
+      description: "Training log and race prep tracking for Salem 70.3 and Sacramento Ironman.",
+      tag: "Personal",
+      url: "./triathlon-dashboard/index.html",
+      status: "planned"          // remove this line once the page actually exists
+    }
+
+    /* Template, copy this into the list above and edit:
+    ,{
+      index: "1.03",              // Book.Sheet, keep sequential within its book
+      book: "I",                  // must match a key in BOOKS above ("I" or "II"), or add a new book
+      title: "New Dashboard Name",
+      description: "One sentence describing what it does.",
+      tag: "Optional short label",
+      url: "./new-dashboard/index.html"
+      // add status: "planned" if the page isn't built yet, remove once it's live
+    }
+    */
+  ];
+
+  const mainEl = document.getElementById('hub-main');
+  const searchInput = document.getElementById('search-input');
+  const pillRow = document.getElementById('pill-row');
+  const countLine = document.getElementById('count-line');
+
+  let state = { book: 'All', query: '' };
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function buildPills() {
+    const books = ['All', ...Object.keys(BOOKS)];
+    pillRow.innerHTML = books.map(b => {
+      const label = b === 'All' ? 'All' : `Book ${b}`;
+      const active = state.book === b;
+      return `<button class="pill${active ? ' active' : ''}" data-book="${b}" aria-pressed="${active}">${label}</button>`;
+    }).join('');
+    pillRow.querySelectorAll('.pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.book = btn.dataset.book;
+        buildPills();
+        render();
+      });
+    });
+  }
+
+  function render() {
+    const q = state.query.trim().toLowerCase();
+    const visible = PARCELS.filter(p => {
+      if (state.book !== 'All' && p.book !== state.book) return false;
+      if (q) {
+        const hay = `${p.title} ${p.description} ${p.tag}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    countLine.innerHTML = `<strong>${visible.length}</strong> of ${PARCELS.length} sheets showing, across <strong>${Object.keys(BOOKS).length}</strong> books.`;
+
+    if (visible.length === 0) {
+      mainEl.innerHTML = `<div class="empty-state">No sheets match "${escapeHtml(state.query)}".<button id="clear-btn" type="button">Clear search</button></div>`;
+      document.getElementById('clear-btn').addEventListener('click', () => {
+        searchInput.value = '';
+        state.query = '';
+        render();
+      });
+      return;
+    }
+
+    const byBook = {};
+    visible.forEach(p => { (byBook[p.book] = byBook[p.book] || []).push(p); });
+
+    mainEl.innerHTML = Object.keys(BOOKS).filter(b => byBook[b]).map(b => {
+      const parcels = byBook[b].slice().sort((a, c) => a.index.localeCompare(c.index));
+      const cards = parcels.map(p => {
+        const planned = p.status === 'planned';
+        const inner = `
+          <span class="parcel-index">${p.index}</span>
+          <h3 class="parcel-title">${escapeHtml(p.title)}</h3>
+          <p class="parcel-desc">${escapeHtml(p.description)}</p>
+          <div class="parcel-tag"><span>${escapeHtml(p.tag)}</span>${
+            planned
+              ? '<span class="planned-label">Not yet built</span>'
+              : '<span class="open">Open sheet &rarr;</span>'
+          }</div>
+        `;
+        return planned
+          ? `<div class="parcel-card is-planned">${inner}</div>`
+          : `<a class="parcel-card" href="${p.url}" target="_blank" rel="noopener">${inner}</a>`;
+      }).join('');
+      return `
+        <section class="book-section">
+          <div class="book-heading">
+            <span class="book-num">BOOK ${b}</span>
+            <h2>${escapeHtml(BOOKS[b].label)}</h2>
+            ${BOOKS[b].note ? `<span class="book-note">${escapeHtml(BOOKS[b].note)}</span>` : ''}
+          </div>
+          <div class="parcel-grid">${cards}</div>
+        </section>
+      `;
+    }).join('');
+  }
+
+  searchInput.addEventListener('input', (e) => {
+    state.query = e.target.value;
+    render();
+  });
+
+  buildPills();
+  render();
+</script>
+</body>
+</html>

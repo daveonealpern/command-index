@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>6024 Cochran Street | CLC Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--s1:#181c25;--s2:#1e2535;--s3:#242d3d;
+  --gold:#c9a96e;--gd:rgba(201,169,110,.18);--gp:rgba(201,169,110,.09);
+  --txt:#e8e4db;--mu:#7a8399;--faint:#252e42;--bd:rgba(255,255,255,.06);
+  --gt:#5ec98b;--gb:#0b2218;--gbr:#1e5c38;
+  --yt:#f0c040;--yb:#231c00;--ybr:#7a5c00;
+  --rt:#f07070;--rb:#280d0d;--rbr:#7a2222;
+  --bt:#6aabf0;--bb:#091828;--bbr:#1a4070;
+  --ot:#f0965a;--ob:#251200;--obr:#7a3c0e;
+}
+html,body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+.hdr{background:var(--s1);border-bottom:1px solid var(--gd);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:200}
+.hdr-title{font-size:17px;font-weight:700;color:var(--gold)}
+.hdr-sub{font-size:10px;color:var(--mu);letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.pill{font-size:10px;padding:3px 10px;border-radius:20px;border:1px solid var(--gd);color:var(--gold);background:var(--gp)}
+.ts{font-size:11px;color:var(--mu)}
+.rfbtn{background:var(--gp);border:1px solid var(--gd);color:var(--gold);padding:5px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit}
+.rfbtn:hover{background:rgba(201,169,110,.16)}
+.wrap{padding:22px 24px;max-width:1300px;margin:0 auto;display:flex;flex-direction:column;gap:30px}
+.sec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+.sec-lbl{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);white-space:nowrap}
+.sec-line{flex:1;height:1px;background:var(--gd)}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:12px;padding:16px 18px}
+.row-2col{display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:24px;align-items:start}
+@media (max-width:900px){.row-2col{grid-template-columns:1fr}}
+.card-flush{background:var(--s1);border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+.met-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}
+.met{background:var(--s2);border-radius:8px;padding:12px 14px;border:1px solid var(--bd)}
+.met-lbl{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.met-val{font-size:16px;font-weight:700;color:var(--txt);line-height:1.2}
+.met-sub{font-size:10px;color:var(--mu);margin-top:3px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.07em;font-weight:600;padding:9px 14px;border-bottom:1px solid var(--faint);background:var(--s2);text-align:left;white-space:nowrap}
+.tbl th.r{text-align:right}
+.tbl td{padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.03);color:var(--txt);vertical-align:middle}
+.tbl td.r{text-align:right;font-variant-numeric:tabular-nums}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover td{background:rgba(255,255,255,.012)}
+.tbl .tot-row td{font-weight:700;color:var(--gold);border-top:1px solid var(--gd);border-bottom:none}
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap}
+.prog-wrap{display:flex;align-items:center;gap:8px}
+.prog-track{flex:1;height:4px;background:var(--faint);border-radius:2px;overflow:hidden;min-width:50px}
+.prog-fill{height:100%;border-radius:2px;background:var(--gold)}
+.ms-scroll{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch}
+.ms-scroll::-webkit-scrollbar{height:4px}
+.ms-scroll::-webkit-scrollbar-track{background:var(--s2);border-radius:2px}
+.ms-scroll::-webkit-scrollbar-thumb{background:var(--gd);border-radius:2px}
+.ms-card{flex-shrink:0;width:185px;border-radius:12px;padding:18px 16px;border:1px solid}
+.ms-num{font-size:44px;font-weight:700;line-height:1;margin-bottom:3px}
+.ms-unit{font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.ms-name{font-size:12px;font-weight:600;color:var(--txt);margin-bottom:3px;line-height:1.3}
+.ms-date{font-size:11px;color:var(--mu)}
+.calc-wrap{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end}
+.calc-lbl{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.calc-input{width:100%;background:var(--s2);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 12px;color:var(--txt);font-size:13px;font-family:inherit;outline:none}
+.calc-input:focus{border-color:var(--gold)}
+.calc-result-tile{background:var(--gp);border:1px solid var(--gd);border-radius:8px;padding:12px 14px}
+.calc-result-lbl{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.calc-result-val{font-size:16px;font-weight:700;color:var(--gold)}
+.calc-result-sub{font-size:11px;margin-top:2px}
+.add-row{display:flex;gap:8px;align-items:flex-end;padding:12px 14px;background:var(--s2);border-top:1px solid var(--faint);flex-wrap:wrap}
+.add-field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:100px}
+.add-field-lbl{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.07em}
+.add-input{background:var(--s1);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:7px 10px;color:var(--txt);font-size:13px;font-family:inherit;outline:none;width:100%}
+.add-input:focus{border-color:var(--gold)}
+.add-btn{background:var(--gp);border:1px solid var(--gd);color:var(--gold);padding:8px 16px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;align-self:flex-end}
+.add-btn:hover{background:rgba(201,169,110,.16)}
+.src-badge{font-size:9px;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;padding:1px 6px;border-radius:10px;border:1px solid var(--faint)}
+.src-local{color:var(--yt);border-color:var(--ybr)}
+.rm-btn{background:transparent;border:none;color:var(--mu);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:4px}
+.rm-btn:hover{color:var(--rt);background:var(--rb)}
+.cyc-btn{background:transparent;border:none;color:var(--gt);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:4px}
+.cyc-btn:hover{background:var(--gb)}
+.loan-divider{height:1px;background:var(--faint);margin:14px 0}
+.loan-row-lbl{font-size:11px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.cal-nav-btn{background:var(--s2);border:1px solid var(--bd);color:var(--txt);padding:5px 14px;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit}
+.cal-nav-btn:hover{border-color:var(--gd);color:var(--gold)}
+.cal-month-lbl{font-size:15px;font-weight:600}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-day-hdr{font-size:10px;color:var(--mu);text-align:center;padding:5px 0;font-weight:600}
+.cal-cell{min-height:54px;background:var(--s2);border-radius:5px;padding:5px;cursor:pointer;border:1px solid transparent;transition:border-color .12s}
+.cal-cell:hover{border-color:var(--gd)}
+.cal-cell.today{border-color:var(--gold)}
+.cal-cell.other-month{opacity:.3;cursor:default}
+.cal-cell.other-month:hover{border-color:transparent}
+.cal-cell.selected{border-color:var(--gold);background:var(--s3)}
+.cal-num{font-size:11px;color:var(--mu);margin-bottom:3px}
+.cal-cell.today .cal-num{color:var(--gold);font-weight:700}
+.cal-dots{display:flex;flex-wrap:wrap;gap:2px}
+.cal-dot{width:5px;height:5px;border-radius:50%}
+.cal-legend{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap}
+.cal-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mu)}
+.event-list{display:flex;flex-direction:column;gap:6px;margin-top:14px}
+.event-row{display:flex;align-items:flex-start;gap:12px;padding:9px 12px;background:var(--s2);border-radius:8px;border-left:3px solid}
+.event-date-col{font-size:11px;color:var(--mu);min-width:74px;flex-shrink:0;padding-top:1px}
+.event-title{font-size:13px;font-weight:500}
+.event-meta{font-size:11px;color:var(--mu);margin-top:2px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--s3);border:1px solid var(--gd);color:var(--txt);padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.show{opacity:1}
+.cal-add-btn{background:var(--gp);border:1px solid var(--gd);color:var(--gold);padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit}
+.cal-add-btn:hover{background:rgba(201,169,110,.16)}
+.cal-creator{background:var(--s2);border:1px solid var(--gd);border-radius:10px;padding:14px;margin-top:14px;display:none;flex-direction:column;gap:10px}
+.cal-creator.open{display:flex}
+.cal-creator-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.cal-creator-row-full{display:grid;grid-template-columns:1fr;gap:10px}
+.cal-creator-label{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px}
+.cal-creator-input{background:var(--s1);border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:7px 10px;color:var(--txt);font-size:13px;font-family:inherit;outline:none;width:100%}
+.cal-creator-input:focus{border-color:var(--gold)}
+.cal-creator-footer{display:flex;justify-content:flex-end;gap:8px}
+.cal-cancel-btn{background:transparent;border:1px solid var(--faint);color:var(--mu);padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit}
+.cal-cancel-btn:hover{border-color:var(--gd);color:var(--txt)}
+.upcoming-strip{margin-top:16px;border-top:1px solid var(--faint);padding-top:14px}
+.upcoming-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.upcoming-row{display:flex;align-items:flex-start;gap:10px;padding:7px 10px;background:var(--s2);border-radius:7px;margin-bottom:5px;border-left:3px solid}
+.upcoming-row:last-child{margin-bottom:0}
+.upcoming-days{font-size:11px;font-weight:700;min-width:32px;flex-shrink:0;padding-top:1px}
+.upcoming-title{font-size:13px;font-weight:500;color:var(--txt)}
+.upcoming-date{font-size:11px;color:var(--mu);margin-top:1px}
+.footer{padding:10px 24px;border-top:1px solid var(--bd);font-size:11px;color:var(--mu);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;max-width:1300px;margin:0 auto}
+.footer a{color:var(--gold);text-decoration:none}
+.empty{padding:20px;text-align:center;color:var(--mu);font-size:12px;font-style:italic}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div>
+    <div class="hdr-title">6024 Cochran Street</div>
+    <div class="hdr-sub">Colton Lee Communities &middot; Simi Valley, CA &middot; 58 Units &middot; Principals Only</div>
+  </div>
+  <div class="hdr-right">
+    <span class="pill">Principals Only</span>
+    <span class="ts" id="ts">Loading...</span>
+    <button class="rfbtn" onclick="fetchAll()">&#8635; Refresh</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div>
+    <div class="sec-hdr"><span class="sec-lbl">Key Milestones</span><div class="sec-line"></div></div>
+    <div class="ms-scroll" id="ms-scroll"><div class="empty">Loading milestones...</div></div>
+    <div style="font-size:11px;color:var(--mu);margin-top:8px">Scroll to view all &middot; Update dates in the Countdowns tab of the private sheet</div>
+  </div>
+
+  <div>
+    <div class="sec-hdr"><span class="sec-lbl">Date Calculator</span><div class="sec-line"></div></div>
+    <div class="card">
+      <div class="calc-wrap">
+        <div>
+          <div class="calc-lbl">Start date</div>
+          <input class="calc-input" type="date" id="calc-start" oninput="runCalc()">
+        </div>
+        <div>
+          <div class="calc-lbl">Add days</div>
+          <input class="calc-input" type="number" id="calc-days" placeholder="e.g. 30" oninput="runCalc()">
+        </div>
+        <div class="calc-result-tile" id="calc-result" style="visibility:hidden">
+          <div class="calc-result-lbl">Resulting deadline</div>
+          <div class="calc-result-val" id="calc-val"></div>
+          <div class="calc-result-sub" id="calc-sub"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="sec-hdr"><span class="sec-lbl">Engineering Plan Status</span><div class="sec-line"></div></div>
+    <div class="card-flush">
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th>Consultant</th><th>Deliverable</th><th>1st Submittal</th>
+            <th>2nd Submittal</th><th>Progress</th><th>Status</th><th>Next Milestone</th>
+          </tr></thead>
+          <tbody id="eng-body"><tr><td colspan="7" class="empty">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="sec-hdr"><span class="sec-lbl">Invoice Tracker</span><div class="sec-line"></div></div>
+    <div class="card">
+      <div class="met-grid" id="inv-sum" style="margin-bottom:14px"></div>
+      <div class="card-flush">
+        <table class="tbl">
+          <thead><tr>
+            <th>Consultant</th><th>Invoice #</th><th>Date</th>
+            <th>Category</th><th class="r">Amount</th><th></th>
+          </tr></thead>
+          <tbody id="inv-body"><tr><td colspan="6" class="empty">Loading...</td></tr></tbody>
+        </table>
+        <div class="add-row">
+          <div class="add-field" style="flex:2">
+            <span class="add-field-lbl">Consultant</span>
+            <input class="add-input" type="text" id="inv-consultant" placeholder="Southland Civil">
+          </div>
+          <div class="add-field">
+            <span class="add-field-lbl">Invoice #</span>
+            <input class="add-input" type="text" id="inv-number" placeholder="INV-001">
+          </div>
+          <div class="add-field">
+            <span class="add-field-lbl">Date</span>
+            <input class="add-input" type="date" id="inv-date">
+          </div>
+          <div class="add-field">
+            <span class="add-field-lbl">Category</span>
+            <input class="add-input" type="text" id="inv-category" placeholder="Engineering">
+          </div>
+          <div class="add-field">
+            <span class="add-field-lbl">Amount</span>
+            <input class="add-input" type="text" id="inv-amount" placeholder="5000">
+          </div>
+          <button class="add-btn" onclick="addInvoice()">+ Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row-2col">
+    <div>
+      <div class="sec-hdr"><span class="sec-lbl">Project Cost Tracker</span><div class="sec-line"></div></div>
+      <div class="card">
+        <div class="met-grid" id="cost-met" style="margin-bottom:14px"></div>
+        <div class="card-flush">
+          <table class="tbl">
+            <thead><tr><th>Category</th><th class="r">Amount</th><th class="r">Per Lot (58)</th></tr></thead>
+            <tbody id="cost-body"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sec-hdr"><span class="sec-lbl">Improvement Budget</span><div class="sec-line"></div></div>
+      <div class="card">
+        <div class="met-grid" id="budget-met" style="margin-bottom:14px"></div>
+        <div class="card-flush" style="margin-bottom:18px">
+          <table class="tbl">
+            <thead><tr><th>Line Item</th><th>Contractor</th><th class="r">Assumed Budget</th><th class="r">Revisions</th><th class="r">Current Budget</th></tr></thead>
+            <tbody id="budget-body"><tr><td colspan="5" class="empty">Loading...</td></tr></tbody>
+          </table>
+        </div>
+
+        <div class="sec-lbl" style="font-size:10px;margin-bottom:8px">Budget Notes</div>
+        <div id="budget-notes-list" style="margin-bottom:12px"></div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <div style="flex:1">
+            <div class="add-field-lbl" style="margin-bottom:4px">Add a note</div>
+            <textarea id="budget-note-input" class="add-input" rows="2" style="resize:vertical;font-family:inherit"></textarea>
+          </div>
+          <button class="add-btn" onclick="addBudgetNote()">+ Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="sec-hdr"><span class="sec-lbl">PSA &amp; Escrow</span><div class="sec-line"></div></div>
+    <div class="card">
+      <div id="psa-note" style="display:none;background:var(--gp);border:1px solid var(--gd);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--gold)"></div>
+      <div class="met-grid" id="psa-grid"><div class="empty" style="grid-column:1/-1">Loading...</div></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="sec-hdr"><span class="sec-lbl">Loan Status</span><div class="sec-line"></div></div>
+    <div class="card" id="loan-section"><div class="empty">Loading...</div></div>
+  </div>
+
+  <div>
+    <div class="sec-hdr"><span class="sec-lbl">Open Items</span><div class="sec-line"></div></div>
+    <div class="card-flush">
+      <table class="tbl">
+        <thead><tr><th style="width:60%">Issue</th><th>Status</th><th>Source</th><th></th></tr></thead>
+        <tbody id="oi-body"><tr><td colspan="4" class="empty">Loading...</td></tr></tbody>
+      </table>
+      <div class="add-row">
+        <div class="add-field" style="flex:1">
+          <span class="add-field-lbl">New open item</span>
+          <input class="add-input" type="text" id="oi-input" placeholder="Describe the issue..." onkeydown="if(event.key==='Enter')addOpenItem()">
+        </div>
+        <button class="add-btn" onclick="addOpenItem()">+ Add item</button>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="sec-hdr"><span class="sec-lbl">Calendar</span><div class="sec-line"></div></div>
+    <div class="card">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="changeMonth(-1)">&#8592;</button>
+        <span class="cal-month-lbl" id="cal-month-lbl"></span>
+        <button class="cal-nav-btn" onclick="changeMonth(1)">&#8594;</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:10px">
+        <div class="cal-legend">
+          <div class="cal-legend-item"><div class="cal-dot" style="background:var(--gold)"></div>Internal</div>
+          <div class="cal-legend-item"><div class="cal-dot" style="background:var(--bt)"></div>Consultant / Shared</div>
+          <div class="cal-legend-item"><div class="cal-dot" style="background:var(--gt)"></div>Added here</div>
+        </div>
+        <button class="cal-add-btn" onclick="toggleCalCreator()">+ Add date</button>
+      </div>
+
+      <!-- DATE CREATOR -->
+      <div class="cal-creator" id="cal-creator">
+        <div class="cal-creator-row">
+          <div>
+            <div class="cal-creator-label">Date</div>
+            <input class="cal-creator-input" type="date" id="ce-date">
+          </div>
+          <div>
+            <div class="cal-creator-label">Category</div>
+            <select class="cal-creator-input" id="ce-category">
+              <option value="Internal">Internal</option>
+              <option value="City Meeting">City Meeting</option>
+              <option value="Buyer Meeting">Buyer Meeting</option>
+              <option value="Lender Meeting">Lender Meeting</option>
+              <option value="Submittal">Submittal</option>
+              <option value="Deadline">Deadline</option>
+              <option value="Consultant Meeting">Consultant Meeting</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <div class="cal-creator-label">Attendees</div>
+            <input class="cal-creator-input" type="text" id="ce-attendees" placeholder="David, Gary...">
+          </div>
+        </div>
+        <div class="cal-creator-row-full">
+          <div>
+            <div class="cal-creator-label">Event title</div>
+            <input class="cal-creator-input" type="text" id="ce-title" placeholder="e.g. Meeting with City Planner">
+          </div>
+        </div>
+        <div class="cal-creator-row-full">
+          <div>
+            <div class="cal-creator-label">Notes</div>
+            <input class="cal-creator-input" type="text" id="ce-notes" placeholder="Optional notes...">
+          </div>
+        </div>
+        <div class="cal-creator-footer">
+          <button class="cal-cancel-btn" onclick="toggleCalCreator()">Cancel</button>
+          <button class="add-btn" onclick="addCalEvent()">Save date</button>
+        </div>
+      </div>
+
+      <div class="event-list" id="event-list"></div>
+
+      <!-- UPCOMING 30 DAYS -->
+      <div class="upcoming-strip" id="upcoming-strip"></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="sec-hdr"><span class="sec-lbl">Contact List</span><div class="sec-line"></div></div>
+    <div class="card-flush">
+      <table class="tbl" id="contacts-table">
+        <thead><tr>
+          <th>Name</th><th>Company</th><th>Cell</th><th>Office</th><th>Email</th><th></th>
+        </tr></thead>
+        <tbody id="contacts-body"><tr><td colspan="6" class="empty">No contacts yet. Add one below.</td></tr></tbody>
+      </table>
+      <div class="add-row">
+        <div class="add-field">
+          <span class="add-field-lbl">Name</span>
+          <input class="add-input" type="text" id="ct-name" placeholder="Jane Smith">
+        </div>
+        <div class="add-field">
+          <span class="add-field-lbl">Company</span>
+          <input class="add-input" type="text" id="ct-company" placeholder="Southland Civil">
+        </div>
+        <div class="add-field">
+          <span class="add-field-lbl">Cell</span>
+          <input class="add-input" type="tel" id="ct-cell" placeholder="(805) 555-0100">
+        </div>
+        <div class="add-field">
+          <span class="add-field-lbl">Office</span>
+          <input class="add-input" type="tel" id="ct-office" placeholder="(805) 555-0101">
+        </div>
+        <div class="add-field" style="flex:2">
+          <span class="add-field-lbl">Email</span>
+          <input class="add-input" type="email" id="ct-email" placeholder="jane@southlandcivil.com">
+        </div>
+        <button class="add-btn" onclick="addContact()">+ Add</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span>
+    <a href="https://docs.google.com/spreadsheets/d/16Jm_UxfJkyErhUBVBI6bfmGCx6zI3ZCzw78uLNFBQ2Q/edit" target="_blank">Private Sheet</a>
+    &nbsp;&middot;&nbsp;
+    <a href="https://docs.google.com/spreadsheets/d/1AtdCSf60BGkMfKrxS5X86PYuPpYy1yhRYDHmjqZGC0I/edit" target="_blank">Consultant Sheet</a>
+  </span>
+  <span id="ft"></span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CSV URLs ───────────────────────────────────────────────────────────────
+const CSV = {
+  countdowns:    'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrOOVXmkJeFONoIssgv-9FzVot0Pp5BY4VcSNWk3LMFKpjLuQHS9CNZZDgYvg2GRXrj_UMJvvBAEH-/pub?gid=0&single=true&output=csv',
+  invoices:      'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrOOVXmkJeFONoIssgv-9FzVot0Pp5BY4VcSNWk3LMFKpjLuQHS9CNZZDgYvg2GRXrj_UMJvvBAEH-/pub?gid=449081721&single=true&output=csv',
+  calInternal:   'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrOOVXmkJeFONoIssgv-9FzVot0Pp5BY4VcSNWk3LMFKpjLuQHS9CNZZDgYvg2GRXrj_UMJvvBAEH-/pub?gid=1850547817&single=true&output=csv',
+  loan:          'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrOOVXmkJeFONoIssgv-9FzVot0Pp5BY4VcSNWk3LMFKpjLuQHS9CNZZDgYvg2GRXrj_UMJvvBAEH-/pub?gid=1915626940&single=true&output=csv',
+  impConsultants:'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrOOVXmkJeFONoIssgv-9FzVot0Pp5BY4VcSNWk3LMFKpjLuQHS9CNZZDgYvg2GRXrj_UMJvvBAEH-/pub?gid=283533030&single=true&output=csv',
+  psa:           'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrOOVXmkJeFONoIssgv-9FzVot0Pp5BY4VcSNWk3LMFKpjLuQHS9CNZZDgYvg2GRXrj_UMJvvBAEH-/pub?gid=915527608&single=true&output=csv',
+  impBudget:     'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrOOVXmkJeFONoIssgv-9FzVot0Pp5BY4VcSNWk3LMFKpjLuQHS9CNZZDgYvg2GRXrj_UMJvvBAEH-/pub?gid=1909609231&single=true&output=csv',
+  costTracker:   'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrOOVXmkJeFONoIssgv-9FzVot0Pp5BY4VcSNWk3LMFKpjLuQHS9CNZZDgYvg2GRXrj_UMJvvBAEH-/pub?gid=1903517262&single=true&output=csv',
+  openItems:     'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrOOVXmkJeFONoIssgv-9FzVot0Pp5BY4VcSNWk3LMFKpjLuQHS9CNZZDgYvg2GRXrj_UMJvvBAEH-/pub?gid=388924802&single=true&output=csv',
+  calShared:     'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrfb42fBKkb4CXkE2DPhRQV62ztcwAkDT-W6Z5RDsgvu78wIe3UXoiaIl565DYSVKy4ppEC_b7cl96/pub?gid=1815266820&single=true&output=csv',
+  planStatus:    'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrfb42fBKkb4CXkE2DPhRQV62ztcwAkDT-W6Z5RDsgvu78wIe3UXoiaIl565DYSVKy4ppEC_b7cl96/pub?gid=1125321175&single=true&output=csv',
+  contacts:      'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrOOVXmkJeFONoIssgv-9FzVot0Pp5BY4VcSNWk3LMFKpjLuQHS9CNZZDgYvg2GRXrj_UMJvvBAEH-/pub?gid=472386260&single=true&output=csv',
+  budget:        'https://docs.google.com/spreadsheets/d/e/2PACX-1vSrOOVXmkJeFONoIssgv-9FzVot0Pp5BY4VcSNWk3LMFKpjLuQHS9CNZZDgYvg2GRXrj_UMJvvBAEH-/pub?gid=1909609231&single=true&output=csv',
+};
+
+const MS_KEYS = [
+  'Planning Commission Hearing',
+  'Approval Vesting Date',
+  'Loan Maturity Date',
+  'PSA Effective Date',
+  'Due Diligence Deadline',
+  '1st Plan Check Submittal',
+  '2nd Plan Check Submittal',
+  'Target Close Date'
+];
+
+const INV_KEY = 'clc_inv_v2';
+const OI_KEY  = 'clc_oi_v2';
+const CAL_KEY  = 'clc_cal_v1';
+const CONTACTS_KEY = 'clc_contacts_v1';
+const BUDGET_NOTES_KEY = 'clc_budget_notes_v1';
+
+// Apps Script write-back relay — sends new entries to the private sheet
+const WRITE_URL = 'https://script.google.com/macros/s/AKfycbxk4JKzdE7S2gyAE_vVab-G3_5LWRlHJRGGuTSAWXXRM7VBrfmUtdLevLgoKSsY_JjnVg/exec';
+let localEvents = [];
+let sheetContacts = [], localContacts = [];
+let localBudgetNotes = [];
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+let calYear = TODAY.getFullYear(), calMonth = TODAY.getMonth();
+let allEvents = [], selectedDate = null;
+let sheetOI = [], localOI = [];
+let sheetInvoices = [], localInvoices = [];
+
+// ── CSV FETCH ──────────────────────────────────────────────────────────────
+async function fetchCSV(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const text = await res.text();
+  return parseCSV(text);
+}
+
+function parseCSV(text) {
+  const rows = [];
+  const lines = text.trim().split('\n');
+  for (const line of lines) {
+    const cols = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { if (inQ && line[i+1]==='"'){cur+='"';i++;} else inQ=!inQ; }
+      else if (c === ',' && !inQ) { cols.push(cur.trim()); cur=''; }
+      else cur += c;
+    }
+    cols.push(cur.trim());
+    rows.push(cols);
+  }
+  if (!rows.length) return [];
+  const headers = rows[0].map(h => h.replace(/^"|"$/g,'').trim());
+  return rows.slice(1).map(row => {
+    const obj = {};
+    headers.forEach((h,i) => { obj[h] = (row[i]||'').replace(/^"|"$/g,'').trim(); });
+    return obj;
+  });
+}
+
+async function safeCSV(url) {
+  try { return await fetchCSV(url); }
+  catch(e) { console.warn('CSV fetch failed:', url, e.message); return []; }
+}
+
+// ── STORAGE ────────────────────────────────────────────────────────────────
+function loadLS(key) { try { return JSON.parse(localStorage.getItem(key)||'[]'); } catch { return []; } }
+function saveLS(key, data) { try { localStorage.setItem(key, JSON.stringify(data)); } catch {} }
+
+// ── WRITE-BACK ─────────────────────────────────────────────────────────────
+// Sends a new entry to the Apps Script relay, which appends it to the
+// matching tab in the private sheet. text/plain avoids a CORS preflight
+// that Apps Script web apps don't handle.
+async function writeToSheet(type, data) {
+  try {
+    const res = await fetch(WRITE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ type, data })
+    });
+    const json = await res.json();
+    return !!json.ok;
+  } catch (e) {
+    console.warn('Write-back failed:', e.message);
+    return false;
+  }
+}
+
+// Once a locally-added item shows up in the sheet data (via the CSV feed),
+// this drops the local copy so it doesn't display twice.
+function pruneSynced(localArr, sheetArr, matchFn) {
+  return localArr.filter(loc => !sheetArr.some(s => matchFn(loc, s)));
+}
+
+// ── TOAST ──────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+function daysFrom(v) {
+  if (!v) return null;
+  // Parse date string as local time, not UTC, to avoid timezone offset issues
+  let d;
+  if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v.trim())) {
+    const [yr, mo, dy] = v.trim().split('-').map(Number);
+    d = new Date(yr, mo - 1, dy);
+  } else {
+    d = new Date(v);
+  }
+  d.setHours(0,0,0,0);
+  return isNaN(d) ? null : Math.round((d - TODAY) / 86400000);
+}
+function fmtDate(v) {
+  if (!v) return 'TBD';
+  let d;
+  if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v.trim())) {
+    const [yr, mo, dy] = v.trim().split('-').map(Number);
+    d = new Date(yr, mo - 1, dy);
+  } else {
+    d = new Date(v);
+  }
+  return isNaN(d) ? String(v) : d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function toNum(v) {
+  if (v===null||v===undefined||v==='') return null;
+  const n = Number(String(v).replace(/[$,\s]/g,''));
+  return isNaN(n) ? null : n;
+}
+// Handles the Improvement Budget tab's format, where negative values are
+// shown in parentheses, e.g. "$ (254,750.00)".
+function parseMoneySigned(v) {
+  if (v===null||v===undefined) return 0;
+  let s = String(v).trim();
+  if (!s || s === '-' || s === '$-' || s === '$ -') return 0;
+  let neg = false;
+  if (s.includes('(') && s.includes(')')) { neg = true; }
+  s = s.replace(/[$,()\s]/g,'');
+  if (!s) return 0;
+  const n = Number(s);
+  if (isNaN(n)) return 0;
+  return neg ? -n : n;
+}
+function money(v, fallback) {
+  const n = toNum(v);
+  if (n===null) return fallback!==undefined?fallback:'TBD';
+  if (n===0) return fallback!==undefined?fallback:'';
+  return '$'+Math.round(n).toLocaleString('en-US');
+}
+function moneyF(v) { return '$'+Math.round(toNum(v)||0).toLocaleString('en-US'); }
+function fmtRate(v) {
+  if (!v) return 'TBD';
+  const s = String(v).trim();
+  if (s.includes('%')) return parseFloat(s).toFixed(1)+'%';
+  const n = toNum(s);
+  if (n===null) return s;
+  return (n<1?n*100:n).toFixed(1)+'%';
+}
+function badge(status) {
+  const m = {
+    'open':{bg:'var(--bb)',c:'var(--bt)',bd:'var(--bbr)'},
+    'pending':{bg:'var(--yb)',c:'var(--yt)',bd:'var(--ybr)'},
+    'complete':{bg:'var(--gb)',c:'var(--gt)',bd:'var(--gbr)'},
+    'completed':{bg:'var(--gb)',c:'var(--gt)',bd:'var(--gbr)'},
+    'in progress':{bg:'var(--bb)',c:'var(--bt)',bd:'var(--bbr)'},
+    'on hold':{bg:'var(--ob)',c:'var(--ot)',bd:'var(--obr)'},
+    'issue':{bg:'var(--rb)',c:'var(--rt)',bd:'var(--rbr)'},
+    'not started':{bg:'#1a1e28',c:'#7a8aaa',bd:'#2a3045'},
+  };
+  const st = m[(status||'').toLowerCase()]||{bg:'#1a1e28',c:'#7a8aaa',bd:'#2a3045'};
+  return `<span class="badge" style="background:${st.bg};color:${st.c};border:1px solid ${st.bd}">${status||'Unknown'}</span>`;
+}
+function cdCls(d) {
+  if (d===null) return {bg:'var(--s1)',bd:'var(--gd)',nc:'var(--gold)'};
+  if (d<0)     return {bg:'var(--s2)',bd:'var(--bd)',nc:'var(--mu)'};
+  if (d<=7)    return {bg:'var(--rb)',bd:'var(--rbr)',nc:'var(--rt)'};
+  if (d<=14)   return {bg:'var(--yb)',bd:'var(--ybr)',nc:'var(--yt)'};
+  return             {bg:'var(--gb)',bd:'var(--gbr)',nc:'var(--gt)'};
+}
+
+// ── MILESTONES ─────────────────────────────────────────────────────────────
+function renderMilestones(rows) {
+  const el = document.getElementById('ms-scroll');
+  const milestones = MS_KEYS.map(name => {
+    const r = rows.find(x => (x['Event Name']||'').trim().toLowerCase() === name.toLowerCase());
+    return {name, date: r ? (r['Target Date']||'').trim() : null};
+  });
+  el.innerHTML = milestones.map(m => {
+    const d = daysFrom(m.date);
+    const {bg,bd,nc} = cdCls(d);
+    const numStr = d===null?'&mdash;':d<0?'Done':String(d);
+    const unitStr = d===null?'date not set':d<0?'completed':'days remaining';
+    return `<div class="ms-card" style="background:${bg};border-color:${bd}">
+      <div class="ms-num" style="color:${nc}">${numStr}</div>
+      <div class="ms-unit" style="color:${nc}">${unitStr}</div>
+      <div class="ms-name">${m.name}</div>
+      <div class="ms-date">${fmtDate(m.date)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── DATE CALCULATOR ────────────────────────────────────────────────────────
+function runCalc() {
+  const s = document.getElementById('calc-start').value;
+  const d = parseInt(document.getElementById('calc-days').value);
+  const res = document.getElementById('calc-result');
+  if (!s||isNaN(d)){res.style.visibility='hidden';return;}
+  const result = new Date(new Date(s).getTime()+d*86400000);
+  if (isNaN(result)){res.style.visibility='hidden';return;}
+  const daysOut = Math.round((result-TODAY)/86400000);
+  const dayName = result.toLocaleDateString('en-US',{weekday:'long'});
+  const isWeekend = result.getDay()===0||result.getDay()===6;
+  document.getElementById('calc-val').textContent = dayName+', '+fmtDate(result);
+  const sub = document.getElementById('calc-sub');
+  sub.textContent = (daysOut>=0?daysOut+' days from today':'Already passed')+(isWeekend?' \u2014 weekend':' \u2014 weekday');
+  sub.style.color = isWeekend?'var(--yt)':'var(--mu)';
+  res.style.visibility='visible';
+}
+
+// ── ENGINEERING ────────────────────────────────────────────────────────────
+function renderEngineering(rows) {
+  const body = document.getElementById('eng-body');
+  const valid = rows.filter(r => (r['Consultant']||'').trim());
+  if (!valid.length){body.innerHTML='<tr><td colspan="7" class="empty">No data yet in the Plan Status tab.</td></tr>';return;}
+  body.innerHTML = valid.map(r => {
+    const pct = Math.min(100,toNum(r['Percent Complete'])||0);
+    const status = (r['Status']||'').trim();
+    const sub1 = (r['1st Submittal']||'').trim();
+    const sub2 = (r['2nd Submittal']||'').trim();
+    return `<tr>
+      <td style="font-weight:500">${(r['Consultant']||'').trim()}</td>
+      <td style="color:var(--mu);font-size:12px">${(r['Deliverables']||'').trim()}</td>
+      <td style="color:var(--mu);font-size:11px">${sub1?fmtDate(sub1):'&mdash;'}</td>
+      <td style="color:var(--mu);font-size:11px">${sub2?fmtDate(sub2):'&mdash;'}</td>
+      <td><div class="prog-wrap">
+        <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
+        <span style="font-size:10px;color:var(--mu);min-width:28px">${Math.round(pct)}%</span>
+      </div></td>
+      <td>${status?badge(status):'&mdash;'}</td>
+      <td style="font-size:11px;color:var(--mu)">${(r['Next Milestone']||'').trim()||'&mdash;'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── INVOICES ───────────────────────────────────────────────────────────────
+function renderInvoiceTable() {
+  const body = document.getElementById('inv-body');
+  const sumEl = document.getElementById('inv-sum');
+  const sheetRows = sheetInvoices.map(r => ({
+    id:null, consultant:(r['Consultant Name']||'').trim(),
+    invNum:(r['Invoice Number']||'').trim(), date:(r['Invoice Date']||'').trim(),
+    amount:toNum(r['Invoice Amount']), category:(r['Category']||'').trim(), source:'sheet'
+  }));
+  const localOnly = localInvoices.filter(l=>l.source==='local');
+  const all = [...sheetRows,...localOnly];
+  let total=0; const byC={};
+  all.forEach(r=>{const n=r.amount||0;total+=n;byC[r.consultant]=(byC[r.consultant]||0)+n;});
+  sumEl.innerHTML = `
+    <div class="met"><div class="met-lbl">Total outstanding</div><div class="met-val" style="color:var(--gold)">${moneyF(total)}</div></div>
+    <div class="met"><div class="met-lbl">Invoice count</div><div class="met-val">${all.length}</div></div>
+    <div class="met"><div class="met-lbl">Consultants billed</div><div class="met-val">${Object.keys(byC).length}</div></div>`;
+  if (!all.length){body.innerHTML='<tr><td colspan="6" class="empty">No invoices yet.</td></tr>';return;}
+  body.innerHTML = all.map(r=>{
+    const srcHtml = r.source==='sheet'
+      ?'<span class="src-badge">Sheet</span>'
+      :'<span class="src-badge src-local">Local</span>';
+    const actHtml = r.id
+      ?`<button class="rm-btn" onclick="removeInvoice('${r.id}')">&#10005;</button>`
+      :`<button class="rm-btn" onclick="this.closest('tr').remove()">&#10005;</button>`;
+    return `<tr>
+      <td style="font-weight:500">${r.consultant||'&mdash;'}</td>
+      <td style="color:var(--mu);font-size:12px">${r.invNum||'&mdash;'}</td>
+      <td style="color:var(--mu);font-size:12px">${r.date?fmtDate(r.date):'&mdash;'}</td>
+      <td style="font-size:12px">${r.category||'&mdash;'}</td>
+      <td class="r">${r.amount?money(r.amount):'&mdash;'}</td>
+      <td style="text-align:right;white-space:nowrap">${srcHtml} ${actHtml}</td>
+    </tr>`;
+  }).join('');
+  body.innerHTML += `<tr class="tot-row"><td colspan="4">Total</td><td class="r">${moneyF(total)}</td><td></td></tr>`;
+}
+
+async function addInvoice() {
+  const consultant = document.getElementById('inv-consultant').value.trim();
+  const invNum     = document.getElementById('inv-number').value.trim();
+  const invDate    = document.getElementById('inv-date').value;
+  const category   = document.getElementById('inv-category').value.trim();
+  const amtRaw     = document.getElementById('inv-amount').value.trim();
+  if (!consultant){showToast('Consultant name is required.');return;}
+  if (!amtRaw){showToast('Amount is required.');return;}
+  const amount = parseFloat(amtRaw.replace(/[$,]/g,''));
+  if (isNaN(amount)){showToast('Please enter a valid amount.');return;}
+  const dateStr = invDate
+    ? new Date(invDate+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+    : new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const id = 'inv_'+Date.now();
+  localInvoices.push({id, consultant, invNum, date:dateStr, amount, category, source:'local'});
+  saveLS(INV_KEY, localInvoices);
+  ['inv-consultant','inv-number','inv-date','inv-category','inv-amount'].forEach(fid=>{document.getElementById(fid).value='';});
+  renderInvoiceTable();
+  showToast('Saving invoice to the sheet...');
+  const ok = await writeToSheet('invoice', { consultant, invNum, date: dateStr, amount, category });
+  showToast(ok ? 'Invoice saved to the sheet.' : "Saved here, but couldn't reach the sheet just now.");
+}
+
+function removeInvoice(id) {
+  localInvoices = localInvoices.filter(x=>x.id!==id);
+  saveLS(INV_KEY, localInvoices);
+  renderInvoiceTable();
+}
+
+// ── COST TRACKER ───────────────────────────────────────────────────────────
+function renderCostTracker(rows) {
+  const body = document.getElementById('cost-body');
+  const metEl = document.getElementById('cost-met');
+  const LOTS = 58;
+  const items = rows.filter(r=>{
+    const c=(r['Category']||'').trim().toLowerCase();
+    return c&&!c.includes('total');
+  });
+  let total=0; items.forEach(r=>{total+=toNum(r['Amount'])||0;});
+  metEl.innerHTML=`<div class="met"><div class="met-lbl">Total spend to date</div><div class="met-val">${moneyF(total)}</div></div>
+    <div class="met"><div class="met-lbl">Cost per lot (58)</div><div class="met-val" style="color:var(--gold)">${moneyF(total/LOTS)}</div></div>`;
+  if (!items.length){body.innerHTML='<tr><td colspan="3" class="empty">No data yet in the Cost Tracker tab.</td></tr>';return;}
+  body.innerHTML = items.map(r=>{
+    const amt=toNum(r['Amount'])||0;
+    const perLot = amt ? amt/LOTS : null;
+    return `<tr>
+      <td>${(r['Category']||'').trim()}</td>
+      <td class="r">${amt?money(amt):''}</td>
+      <td class="r">${perLot?money(perLot):''}</td>
+    </tr>`;
+  }).join('');
+  body.innerHTML+=`<tr class="tot-row"><td>Total</td><td class="r">${moneyF(total)}</td><td class="r">${moneyF(total/LOTS)}</td></tr>`;
+}
+
+// ── IMPROVEMENT BUDGET ──────────────────────────────────────────────────────
+function budgetArrow(pct) {
+  // Decrease = good (green, down arrow). Increase = bad (red, up arrow).
+  if (pct === null || Math.abs(pct) < 0.005) {
+    return `<span style="color:var(--mu)">&#8212;</span>`;
+  }
+  if (pct < 0) {
+    return `<span style="color:var(--gt)">&#9660; ${Math.abs(pct).toFixed(1)}%</span>`;
+  }
+  return `<span style="color:var(--rt)">&#9650; ${pct.toFixed(1)}%</span>`;
+}
+
+function renderBudget(rows) {
+  const body = document.getElementById('budget-body');
+  const metEl = document.getElementById('budget-met');
+  const LOTS = 58;
+
+  // Real rows only: skip the blank spacer rows in the sheet
+  const items = rows.filter(r => (r['Line Item']||'').trim());
+  if (!items.length) {
+    body.innerHTML = '<tr><td colspan="5" class="empty">No data yet in the Improvement Budget tab.</td></tr>';
+    metEl.innerHTML = '';
+    return;
+  }
+
+  // The three section totals ("Total, CONSTRUCTION", "Total, CONSULTANTS",
+  // "Total, PERMITS, BONDS, FEES") sum to the full project budget — adding
+  // them up here gives the project total without depending on there being
+  // (or not being) a combined grand-total row further down the sheet.
+  const totalRows = items.filter(r => /^total,/i.test((r['Line Item']||'').trim()));
+  const totalAssumed = totalRows.reduce((s,r)=>s+parseMoneySigned(r['Assumed Budget']), 0);
+  const totalCurrent = totalRows.reduce((s,r)=>s+parseMoneySigned(r['Current Budget']), 0);
+  const totalVariance = totalCurrent - totalAssumed;
+  const variancePct = totalAssumed ? (totalVariance/totalAssumed*100) : null;
+
+  metEl.innerHTML = `
+    <div class="met"><div class="met-lbl">Assumed budget</div><div class="met-val">${moneyF(totalAssumed)}</div></div>
+    <div class="met"><div class="met-lbl">Current budget</div><div class="met-val" style="color:var(--gold)">${moneyF(totalCurrent)}</div></div>
+    <div class="met"><div class="met-lbl">Current $/lot (58)</div><div class="met-val" style="color:var(--mu)">${moneyF(totalCurrent/LOTS)}</div></div>
+    <div class="met"><div class="met-lbl">Net change</div><div class="met-val" style="color:${totalVariance<0?'var(--gt)':(totalVariance>0?'var(--rt)':'var(--mu)')}">${totalVariance===0?'&#8212;':(totalVariance<0?'-':'+')+moneyF(Math.abs(totalVariance))}</div></div>
+    <div class="met"><div class="met-lbl">Variance vs. assumed</div><div class="met-val">${budgetArrow(variancePct)}</div></div>
+  `;
+
+  body.innerHTML = items.map(r => {
+    const lineItem = (r['Line Item']||'').trim();
+    const isTotal = /^total,/i.test(lineItem);
+    const isContingency = /^contingency$/i.test(lineItem);
+    const assumed = parseMoneySigned(r['Assumed Budget']);
+    const revisions = parseMoneySigned(r['Revisions']);
+    const current = parseMoneySigned(r['Current Budget']);
+    const revColor = revisions < 0 ? 'var(--gt)' : (revisions > 0 ? 'var(--rt)' : 'var(--mu)');
+    const revArrow = revisions < 0 ? '&#9660;' : (revisions > 0 ? '&#9650;' : '');
+    const rowStyle = isTotal ? ' style="font-weight:700;border-top:1px solid var(--gd)"' : (isContingency ? ' style="font-style:italic;color:var(--mu)"' : '');
+    return `<tr${rowStyle}>
+      <td>${lineItem}</td>
+      <td style="color:var(--mu);font-size:12px">${(r['Contractor']||'').trim()||'&mdash;'}</td>
+      <td class="r">${assumed?moneyF(assumed):'&mdash;'}</td>
+      <td class="r" style="color:${revColor}">${revisions?revArrow+' '+moneyF(Math.abs(revisions)):'&mdash;'}</td>
+      <td class="r">${current?moneyF(current):'&mdash;'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderBudgetNotes() {
+  const el = document.getElementById('budget-notes-list');
+  if (!localBudgetNotes.length) {
+    el.innerHTML = '<div class="empty" style="padding:10px 0">No notes yet.</div>';
+    return;
+  }
+  const sorted = [...localBudgetNotes].sort((a,b)=> b.id.localeCompare(a.id));
+  el.innerHTML = sorted.map(n => `
+    <div style="padding:8px 0;border-bottom:1px solid var(--faint);display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+      <div>
+        <div style="font-size:11px;color:var(--mu);margin-bottom:2px">${n.date}</div>
+        <div style="font-size:13px;color:var(--txt);white-space:pre-wrap">${n.note}</div>
+      </div>
+      <button class="rm-btn" onclick="removeBudgetNote('${n.id}')" title="Remove">&#10005;</button>
+    </div>`).join('');
+}
+
+async function addBudgetNote() {
+  const input = document.getElementById('budget-note-input');
+  const val = input.value.trim();
+  if (!val) { showToast('Please enter a note.'); return; }
+  const dateStr = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  const id = 'bn_' + Date.now();
+  localBudgetNotes.push({ id, date: dateStr, note: val });
+  saveLS(BUDGET_NOTES_KEY, localBudgetNotes);
+  input.value = '';
+  renderBudgetNotes();
+  showToast('Saving note to the sheet...');
+  const ok = await writeToSheet('budgetnote', { date: dateStr, note: val });
+  showToast(ok ? 'Note saved to the sheet.' : "Saved here, but couldn't reach the sheet just now.");
+}
+
+function removeBudgetNote(id) {
+  localBudgetNotes = localBudgetNotes.filter(x => x.id !== id);
+  saveLS(BUDGET_NOTES_KEY, localBudgetNotes);
+  renderBudgetNotes();
+}
+
+// ── PSA ────────────────────────────────────────────────────────────────────
+function renderPSA(rows) {
+  const el = document.getElementById('psa-grid');
+  const noteEl = document.getElementById('psa-note');
+  const data={};
+  rows.forEach(r=>{if(r['Field'])data[r['Field'].trim()]=r['Value']||'';});
+  const note=data['Notes'];
+  if (note){noteEl.textContent=note;noteEl.style.display='block';}
+  const fields=[
+    {lbl:'Buyer',key:'Buyer'},
+    {lbl:'Purchase price',key:'Purchase Price',isMoney:true},
+    {lbl:'Execution date',key:'Execution Date',isDate:true},
+    {lbl:'Due diligence deadline',key:'Due Diligence Deadline',isDate:true},
+    {lbl:'Deposit amount',key:'Deposit Amount',isMoney:true},
+    {lbl:'Deposit goes hard',key:'Deposit Hard Date',isDate:true},
+    {lbl:'Close of escrow',key:'Close of Escrow',isDate:true},
+  ];
+  if (!rows.length){el.innerHTML='<div class="empty" style="grid-column:1/-1">No PSA data yet. Add rows to the PSA tab.</div>';return;}
+  el.innerHTML=fields.map(f=>{
+    const raw=data[f.key]||'';
+    let val=raw||'TBD';
+    if (f.isMoney&&raw) val=money(raw,'TBD');
+    if (f.isDate&&raw) val=fmtDate(raw);
+    const days=f.isDate&&raw?daysFrom(raw):null;
+    return `<div class="met">
+      <div class="met-lbl">${f.lbl}</div>
+      <div class="met-val" style="font-size:14px;color:${!raw?'var(--mu)':'var(--txt)'}">${val}</div>
+      ${days!==null&&days>=0?`<div class="met-sub" style="color:${days<=14?'var(--rt)':'var(--mu)'}">${days}d remaining</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── LOAN ────────────────────────────────────────────────────────────────────
+function renderLoan(rows) {
+  const el = document.getElementById('loan-section');
+  const loanRows = rows.filter(r=>String(Object.values(r)[0]||'').trim());
+  if (!loanRows.length){el.innerHTML='<div class="empty">No loan data yet. Add rows to the Loan tab.</div>';return;}
+  const headers = Object.keys(loanRows[0]);
+  const loanCol = headers[0];
+  const fieldDefs=[
+    {lbl:'Lender',key:'Lender'},
+    {lbl:'Principal',key:'Principal',isMoney:true,color:'var(--gold)'},
+    {lbl:'Rate',key:'Rate',isRate:true},
+    {lbl:'Interest',key:'Interest',isMoney:true},
+    {lbl:'Payoff',key:'Payoff',isMoney:true},
+    {lbl:'Maturity date',key:'Maturity Date',isDate:true},
+  ];
+  el.innerHTML = loanRows.map((row,idx)=>{
+    const loanName=String(row[loanCol]||'').trim();
+    const matDate=String(row['Maturity Date']||'').trim();
+    const days=daysFrom(matDate);
+    const mc=days===null?'var(--mu)':days<=30?'var(--rt)':days<=90?'var(--yt)':'var(--gt)';
+    const tiles=fieldDefs.map(f=>{
+      let val=String(row[f.key]||'').trim()||'TBD';
+      let color=f.color||'var(--txt)';
+      if (f.isMoney&&row[f.key]) val=money(row[f.key],'TBD');
+      if (f.isRate) val=fmtRate(row[f.key]);
+      if (f.isDate){val=fmtDate(row[f.key]);color=mc;}
+      if (val==='TBD') color='var(--mu)';
+      return `<div class="met">
+        <div class="met-lbl">${f.lbl}</div>
+        <div class="met-val" style="font-size:14px;color:${color}">${val}</div>
+        ${f.isDate&&days!==null?`<div class="met-sub" style="color:${mc}">${days<0?'Matured':days+'d remaining'}${days>=0&&days<=90?' &mdash; action required':''}</div>`:''}
+      </div>`;
+    }).join('');
+    return `${idx>0?'<div class="loan-divider"></div>':''}
+      <div class="loan-row-lbl">${loanName}</div>
+      <div class="met-grid">${tiles}</div>`;
+  }).join('');
+}
+
+// ── OPEN ITEMS ─────────────────────────────────────────────────────────────
+function renderOpenItems() {
+  const body = document.getElementById('oi-body');
+  const all=[
+    ...sheetOI.map(r=>({issue:(r['Issue']||'').trim(),status:(r['Status']||'Open').trim(),source:'sheet',id:null})),
+    ...localOI.map(x=>({issue:x.issue,status:x.status,source:'local',id:x.id}))
+  ].filter(r=>r.issue);
+  if (!all.length){body.innerHTML='<tr><td colspan="4" class="empty">No open items yet.</td></tr>';return;}
+  body.innerHTML=all.map(item=>{
+    const struck=item.status.toLowerCase()==='complete'||item.status.toLowerCase()==='completed';
+    const srcHtml=item.source==='sheet'
+      ?'<span class="src-badge">Sheet</span>'
+      :'<span class="src-badge src-local">Local</span>';
+    const acts=item.id?`
+      <button class="cyc-btn" onclick="cycleOI('${item.id}')" title="Cycle status">&#10003;</button>
+      <button class="rm-btn" onclick="removeOI('${item.id}')" title="Remove">&#10005;</button>`:'';
+    return `<tr>
+      <td style="${struck?'text-decoration:line-through;color:var(--mu)':''}">${item.issue}</td>
+      <td>${badge(item.status)}</td>
+      <td>${srcHtml}</td>
+      <td style="text-align:right;white-space:nowrap">${acts}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function addOpenItem() {
+  const input=document.getElementById('oi-input');
+  const val=input.value.trim();
+  if (!val){showToast('Please enter an issue description.');return;}
+  localOI.push({id:'oi_'+Date.now(),issue:val,status:'Open'});
+  saveLS(OI_KEY,localOI);
+  input.value='';
+  renderOpenItems();
+  showToast('Saving to the sheet...');
+  const ok = await writeToSheet('openitem', { issue: val, status: 'Open' });
+  showToast(ok ? 'Open item saved to the sheet.' : "Saved here, but couldn't reach the sheet just now.");
+}
+
+function cycleOI(id) {
+  const item=localOI.find(x=>x.id===id);
+  if (!item) return;
+  const cycle=['Open','In Progress','Complete'];
+  item.status=cycle[(cycle.indexOf(item.status)+1)%cycle.length];
+  saveLS(OI_KEY,localOI);
+  renderOpenItems();
+}
+
+function removeOI(id) {
+  localOI=localOI.filter(x=>x.id!==id);
+  saveLS(OI_KEY,localOI);
+  renderOpenItems();
+}
+
+// ── CALENDAR LOCAL EVENTS ──────────────────────────────────────────────────
+function toggleCalCreator() {
+  const el = document.getElementById('cal-creator');
+  el.classList.toggle('open');
+  if (el.classList.contains('open')) {
+    // Pre-fill date with selected date or today
+    const d = selectedDate || new Date().toISOString().split('T')[0];
+    document.getElementById('ce-date').value = d;
+    document.getElementById('ce-title').focus();
+  }
+}
+
+async function addCalEvent() {
+  const date      = document.getElementById('ce-date').value;
+  const title     = document.getElementById('ce-title').value.trim();
+  const category  = document.getElementById('ce-category').value;
+  const attendees = document.getElementById('ce-attendees').value.trim();
+  const notes     = document.getElementById('ce-notes').value.trim();
+
+  if (!date)  { showToast('Please select a date.'); return; }
+  if (!title) { showToast('Please enter an event title.'); return; }
+
+  const newEvent = {
+    id: 'cal_' + Date.now(),
+    date, title, category, attendees, notes,
+    source: 'local'
+  };
+
+  localEvents.push(newEvent);
+  saveLS(CAL_KEY, localEvents);
+
+  // Clear form and close
+  ['ce-date','ce-title','ce-attendees','ce-notes'].forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('ce-category').value = 'Internal';
+  document.getElementById('cal-creator').classList.remove('open');
+
+  // Merge into allEvents and re-render
+  rebuildAllEvents();
+  showToast('Saving date to the sheet...');
+  const ok = await writeToSheet('calendar', { date, title, category, attendees, notes });
+  showToast(ok ? 'Date saved to the sheet.' : "Saved here, but couldn't reach the sheet just now.");
+}
+
+function removeCalEvent(id) {
+  localEvents = localEvents.filter(x => x.id !== id);
+  saveLS(CAL_KEY, localEvents);
+  rebuildAllEvents();
+}
+
+function rebuildAllEvents() {
+  // Keep sheet events, re-add local events
+  allEvents = [
+    ...allEvents.filter(e => e.source === 'internal' || e.source === 'shared'),
+    ...localEvents.map(e => ({...e, source:'local'}))
+  ];
+  renderCalendar();
+  renderUpcoming();
+}
+
+function renderUpcoming() {
+  const el = document.getElementById('upcoming-strip');
+  const in30 = new Date(TODAY.getTime() + 30 * 86400000);
+  function parseLocalDate(v) {
+    const ds = String(v||'').trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(ds)) {
+      const [yr,mo,dy] = ds.split('-').map(Number);
+      const d = new Date(yr, mo-1, dy); d.setHours(0,0,0,0); return d;
+    }
+    const d = new Date(ds); d.setHours(0,0,0,0); return d;
+  }
+  const upcoming = allEvents
+    .filter(e => {
+      if (!e.date) return false;
+      const d = parseLocalDate(e.date);
+      return !isNaN(d) && d >= TODAY && d <= in30;
+    })
+    .sort((a,b) => parseLocalDate(a.date) - parseLocalDate(b.date));
+
+  if (!upcoming.length) {
+    el.innerHTML = '<div class="upcoming-strip"><div class="upcoming-lbl">Upcoming — Next 30 Days</div><div style="font-size:12px;color:var(--mu);font-style:italic">No events in the next 30 days.</div></div>';
+    return;
+  }
+
+  const rows = upcoming.map(e => {
+    const days = daysFrom(e.date);
+    const color = e.source==='internal'?'var(--gold)':e.source==='local'?'var(--gt)':'var(--bt)';
+    const dc = days<=3?'var(--rt)':days<=7?'var(--yt)':'var(--gt)';
+    const removeBtn = e.source==='local'
+      ? `<button class="rm-btn" onclick="removeCalEvent('${e.id}')" title="Remove" style="margin-left:auto;flex-shrink:0">&#10005;</button>`
+      : '';
+    return `<div class="upcoming-row" style="border-left-color:${color}">
+      <div class="upcoming-days" style="color:${dc}">${days}d</div>
+      <div style="flex:1">
+        <div class="upcoming-title">${e.title}</div>
+        <div class="upcoming-date">${fmtDate(e.date)}${e.category?' &middot; '+e.category:''}${e.attendees?' &middot; '+e.attendees:''}</div>
+      </div>
+      ${removeBtn}
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `<div class="upcoming-lbl">Upcoming &mdash; Next 30 Days</div>${rows}`;
+}
+
+// ── CALENDAR ────────────────────────────────────────────────────────────────
+function renderCalendar() {
+  const lbl=document.getElementById('cal-month-lbl');
+  const grid=document.getElementById('cal-grid');
+  lbl.textContent=new Date(calYear,calMonth,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  let h=['Su','Mo','Tu','We','Th','Fr','Sa'].map(d=>`<div class="cal-day-hdr">${d}</div>`).join('');
+  const first=new Date(calYear,calMonth,1).getDay();
+  const dim=new Date(calYear,calMonth+1,0).getDate();
+  const prev=new Date(calYear,calMonth,0).getDate();
+  for(let i=0;i<first;i++) h+=`<div class="cal-cell other-month"><div class="cal-num">${prev-first+1+i}</div></div>`;
+  for(let d=1;d<=dim;d++){
+    const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday=TODAY.getFullYear()===calYear&&TODAY.getMonth()===calMonth&&TODAY.getDate()===d;
+    const isSel=selectedDate===ds;
+    const evs=allEvents.filter(e=>{
+      if (!e.date) return false;
+      let ed;
+      const ds = String(e.date).trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(ds)) {
+        const [yr,mo,dy]=ds.split('-').map(Number);
+        ed=new Date(yr,mo-1,dy);
+      } else { ed=new Date(ds); }
+      ed.setHours(0,0,0,0);
+      return ed.getFullYear()===calYear&&ed.getMonth()===calMonth&&ed.getDate()===d;
+    });
+    const dots=evs.map(e=>`<div class="cal-dot" style="background:${e.source==='internal'?'var(--gold)':e.source==='local'?'var(--gt)':'var(--bt)'}"></div>`).join('');
+    h+=`<div class="cal-cell${isToday?' today':''}${isSel?' selected':''}" onclick="selectDate('${ds}')">
+      <div class="cal-num">${d}</div><div class="cal-dots">${dots}</div></div>`;
+  }
+  const rem=42-first-dim;
+  for(let d=1;d<=rem;d++) h+=`<div class="cal-cell other-month"><div class="cal-num">${d}</div></div>`;
+  grid.innerHTML=h;
+  renderEventList();
+}
+
+function selectDate(ds){selectedDate=selectedDate===ds?null:ds;renderCalendar();}
+function changeMonth(dir){calMonth+=dir;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}selectedDate=null;renderCalendar();}
+
+function renderEventList() {
+  const el=document.getElementById('event-list');
+  let evs=selectedDate
+    ?allEvents.filter(e=>{
+      if (!e.date) return false;
+      const ds=String(e.date).trim();
+      let ed;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(ds)){const [yr,mo,dy]=ds.split('-').map(Number);ed=new Date(yr,mo-1,dy);}
+      else ed=new Date(ds);
+      ed.setHours(0,0,0,0);
+      const [syr,smo,sdy]=selectedDate.split('-').map(Number);
+      const sd=new Date(syr,smo-1,sdy);
+      return ed.getTime()===sd.getTime();
+    })
+    :allEvents.filter(e=>{
+      if (!e.date) return false;
+      const ds=String(e.date).trim();
+      let ed;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(ds)){const [yr,mo,dy]=ds.split('-').map(Number);ed=new Date(yr,mo-1,dy);}
+      else ed=new Date(ds);
+      ed.setHours(0,0,0,0);
+      return ed.getFullYear()===calYear&&ed.getMonth()===calMonth;
+    }).sort((a,b)=>{
+      const [ay,am,ad]=String(a.date).split('-').map(Number);
+      const [by,bm,bd]=String(b.date).split('-').map(Number);
+      return new Date(ay,am-1,ad)-new Date(by,bm-1,bd);
+    });
+  if (!evs.length){el.innerHTML=`<div style="font-size:12px;color:var(--mu);font-style:italic;padding:6px 0">${selectedDate?'No events on this date.':'No events this month.'}</div>`;return;}
+  el.innerHTML=evs.map(e=>{
+    const color=e.source==='internal'?'var(--gold)':e.source==='local'?'var(--gt)':'var(--bt)';
+    const meta=[e.category,e.attendees].filter(Boolean).join(' &middot; ');
+    const removeBtn=e.source==='local'?`<button class="rm-btn" onclick="removeCalEvent('${e.id}')" title="Remove">&#10005;</button>`:'';
+    return `<div class="event-row" style="border-left-color:${color};display:flex;align-items:flex-start;gap:12px">
+      <div class="event-date-col">${fmtDate(e.date)}</div>
+      <div style="flex:1">
+        <div class="event-title">${e.title}</div>
+        ${meta?`<div class="event-meta">${meta}</div>`:''}
+        ${e.notes?`<div class="event-meta" style="font-style:italic">${e.notes}</div>`:''}
+      </div>
+      ${removeBtn}
+    </div>`;
+  }).join('');
+}
+
+// ── CONTACTS ──────────────────────────────────────────────────────────────
+function renderContacts() {
+  const body = document.getElementById('contacts-body');
+  const sheetRows = sheetContacts.map(r => ({
+    id:null, name:(r['Name']||'').trim(), company:(r['Company']||'').trim(),
+    cell:(r['Cell']||'').trim(), office:(r['Office']||'').trim(),
+    email:(r['Email']||'').trim(), source:'sheet'
+  })).filter(r => r.name);
+  const localRows = localContacts.map(c => ({...c, source:'local'}));
+  const all = [...sheetRows, ...localRows];
+  if (!all.length) {
+    body.innerHTML = '<tr><td colspan="6" class="empty">No contacts yet. Add one below.</td></tr>';
+    return;
+  }
+  const sorted = [...all].sort((a,b) => a.name.localeCompare(b.name));
+  body.innerHTML = sorted.map(c => {
+    const srcHtml = c.source==='sheet'
+      ? '<span class="src-badge">Sheet</span>'
+      : '<span class="src-badge src-local">Local</span>';
+    const rmHtml = c.id
+      ? `<button class="rm-btn" onclick="removeContact('${c.id}')" title="Remove">&#10005;</button>`
+      : `<button class="rm-btn" onclick="this.closest('tr').remove()" title="Remove">&#10005;</button>`;
+    return `<tr>
+    <td style="font-weight:500">${c.name||'&mdash;'}</td>
+    <td style="color:var(--mu);font-size:12px">${c.company||'&mdash;'}</td>
+    <td style="font-size:12px">
+      ${c.cell ? `<a href="tel:${c.cell}" style="color:var(--gold);text-decoration:none">${c.cell}</a>` : '&mdash;'}
+    </td>
+    <td style="font-size:12px">
+      ${c.office ? `<a href="tel:${c.office}" style="color:var(--mu);text-decoration:none">${c.office}</a>` : '&mdash;'}
+    </td>
+    <td style="font-size:12px">
+      ${c.email ? `<a href="mailto:${c.email}" style="color:var(--bt);text-decoration:none">${c.email}</a>` : '&mdash;'}
+    </td>
+    <td style="text-align:right;white-space:nowrap">${srcHtml} ${rmHtml}</td>
+  </tr>`;
+  }).join('');
+}
+
+async function addContact() {
+  const name    = document.getElementById('ct-name').value.trim();
+  const company = document.getElementById('ct-company').value.trim();
+  const cell    = document.getElementById('ct-cell').value.trim();
+  const office  = document.getElementById('ct-office').value.trim();
+  const email   = document.getElementById('ct-email').value.trim();
+
+  if (!name) { showToast('Name is required.'); return; }
+
+  localContacts.push({ id: 'ct_' + Date.now(), name, company, cell, office, email });
+  saveLS(CONTACTS_KEY, localContacts);
+
+  ['ct-name','ct-company','ct-cell','ct-office','ct-email'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+
+  renderContacts();
+  showToast('Saving contact to the sheet...');
+  const ok = await writeToSheet('contact', { name, company, cell, office, email });
+  showToast(ok ? 'Contact saved to the sheet.' : "Saved here, but couldn't reach the sheet just now.");
+}
+
+function removeContact(id) {
+  localContacts = localContacts.filter(x => x.id !== id);
+  saveLS(CONTACTS_KEY, localContacts);
+  renderContacts();
+}
+
+// ── MAIN ────────────────────────────────────────────────────────────────────
+async function fetchAll() {
+  document.getElementById('ts').textContent = 'Refreshing...';
+
+  // Show local data immediately
+  localInvoices = loadLS(INV_KEY);
+  localOI = loadLS(OI_KEY);
+  localEvents = loadLS(CAL_KEY);
+  localContacts = loadLS(CONTACTS_KEY);
+  localBudgetNotes = loadLS(BUDGET_NOTES_KEY);
+  renderInvoiceTable();
+  renderOpenItems();
+  renderCalendar();
+  renderUpcoming();
+  renderContacts();
+  renderBudgetNotes();
+
+  // Fetch all CSV sources independently
+  safeCSV(CSV.countdowns).then(d => renderMilestones(d));
+  safeCSV(CSV.planStatus).then(d => renderEngineering(d));
+  safeCSV(CSV.costTracker).then(d => renderCostTracker(d));
+  safeCSV(CSV.budget).then(d => renderBudget(d));
+  safeCSV(CSV.psa).then(d => renderPSA(d));
+  safeCSV(CSV.loan).then(d => renderLoan(d));
+  safeCSV(CSV.openItems).then(d => {
+    sheetOI = d.filter(r => (r['Issue']||'').trim());
+    const before = localOI.length;
+    localOI = pruneSynced(localOI, sheetOI, (loc, s) =>
+      (loc.issue||'').trim() === (s['Issue']||'').trim()
+    );
+    if (localOI.length !== before) saveLS(OI_KEY, localOI);
+    renderOpenItems();
+  });
+  safeCSV(CSV.invoices).then(d => {
+    sheetInvoices = d.filter(r => (r['Consultant Name']||'').trim());
+    const before = localInvoices.length;
+    localInvoices = pruneSynced(localInvoices, sheetInvoices, (loc, s) =>
+      (loc.consultant||'').trim() === (s['Consultant Name']||'').trim() &&
+      (loc.invNum||'').trim() === (s['Invoice Number']||'').trim() &&
+      Math.abs((loc.amount||0) - (toNum(s['Invoice Amount'])||0)) < 0.01
+    );
+    if (localInvoices.length !== before) saveLS(INV_KEY, localInvoices);
+    renderInvoiceTable();
+  });
+  safeCSV(CSV.contacts).then(d => {
+    sheetContacts = d.filter(r => (r['Name']||'').trim());
+    const before = localContacts.length;
+    localContacts = pruneSynced(localContacts, sheetContacts, (loc, s) =>
+      (loc.name||'').trim() === (s['Name']||'').trim() &&
+      (loc.company||'').trim() === (s['Company']||'').trim()
+    );
+    if (localContacts.length !== before) saveLS(CONTACTS_KEY, localContacts);
+    renderContacts();
+  });
+
+  // Merge both calendars
+  Promise.all([safeCSV(CSV.calInternal), safeCSV(CSV.calShared)]).then(([ci, cs]) => {
+    const ciRows = ci.filter(r=>(r['Date']||'').trim());
+    const csRows = cs.filter(r=>(r['Date']||'').trim());
+
+    const before = localEvents.length;
+    localEvents = pruneSynced(localEvents, ciRows, (loc, s) =>
+      (loc.date||'').trim() === (s['Date']||'').trim() &&
+      (loc.title||'').trim() === (s['Event Title']||'').trim()
+    );
+    if (localEvents.length !== before) saveLS(CAL_KEY, localEvents);
+
+    allEvents = [
+      ...ciRows.map(r=>({
+        date:(r['Date']||'').trim(), title:(r['Event Title']||'').trim(),
+        category:(r['Category']||'').trim(), attendees:(r['Attendees']||'').trim(),
+        notes:(r['Notes']||'').trim(), source:'internal'
+      })),
+      ...csRows.map(r=>({
+        date:(r['Date']||'').trim(), title:(r['Event']||r['Event Title']||'').trim(),
+        category:(r['Category']||'').trim(), attendees:(r['Attendees']||'').trim(),
+        notes:(r['Notes']||'').trim(), source:'shared'
+      })),
+      ...localEvents.map(e=>({...e, source:'local'})),
+    ];
+    renderCalendar();
+    renderUpcoming();
+  });
+
+  const ts = new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  document.getElementById('ts').textContent = 'Updated '+ts;
+  document.getElementById('ft').textContent = 'Last refreshed '+ts;
+}
+
+fetchAll();
+</script>
+</body>
+</html>

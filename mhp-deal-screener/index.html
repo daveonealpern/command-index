@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLC Deal Screener</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&family=Cinzel:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#B8823A; --gold-light:#D4A865; --gold-deep:#7A5400;
+  --slate:#5C707B; --slate-dark:#3D4F58; --charcoal:#2C3035;
+  --warm-white:#FAF8F5; --stone:#E8E2D9;
+  --pass:#3E6B4F; --warn:#A4552D; --ink:#2C3035;
+  --hair:#D9D2C6;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',system-ui,sans-serif; background:var(--warm-white); color:var(--ink);
+  font-size:14px; line-height:1.45;}
+h1,h2,h3{font-family:'Playfair Display',Georgia,serif;}
+
+/* ---------- Header ---------- */
+header.masthead{background:var(--charcoal); color:var(--warm-white); padding:22px 28px 18px;}
+.mast-inner{max-width:1060px; margin:0 auto; display:flex; align-items:center; gap:18px; flex-wrap:wrap;}
+.mast-title h1{font-size:26px; font-weight:700; letter-spacing:.01em; color:var(--warm-white);}
+.mast-title .sub{font-family:'Cinzel',serif; font-size:11px; letter-spacing:.28em; color:var(--gold-light); margin-top:3px; text-transform:uppercase;}
+.mast-meta{margin-left:auto; text-align:right; font-size:11px; color:#B9C2C8; line-height:1.6;}
+.mast-meta b{color:var(--warm-white);}
+
+/* ---------- Verdict strip ---------- */
+#verdictStrip{position:sticky; top:0; z-index:50; background:var(--slate-dark); color:#fff;
+  border-bottom:3px solid var(--gold); box-shadow:0 2px 8px rgba(44,48,53,.25);}
+.vs-inner{max-width:1060px; margin:0 auto; display:flex; align-items:stretch; gap:0; flex-wrap:wrap;}
+.vs-cell{padding:10px 18px; border-right:1px solid rgba(255,255,255,.14); min-width:120px;}
+.vs-cell .k{font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:#C7CFD4;}
+.vs-cell .v{font-size:17px; font-weight:700; margin-top:2px; font-variant-numeric:tabular-nums;}
+.vs-verdict{display:flex; align-items:center; gap:12px; padding:10px 20px; flex:1; min-width:280px;}
+.diamond{width:52px; height:26px; background:var(--gold); transform:none; position:relative;
+  clip-path:polygon(50% 0, 100% 50%, 50% 100%, 0 50%); display:flex; align-items:center; justify-content:center; flex:0 0 52px;}
+.diamond span{font-family:'Playfair Display',serif; font-weight:700; font-size:11px; color:#fff;}
+.vs-verdict .verdict-text{font-family:'Playfair Display',serif; font-size:20px; font-weight:700; letter-spacing:.01em;}
+.vs-verdict .verdict-text.pass{color:#CFE8D8;}
+.vs-verdict .verdict-text.fail{color:#F3C9AF;}
+nav.toolbar{max-width:1060px; margin:0 auto; display:flex; gap:2px; padding:6px 12px; flex-wrap:wrap; background:var(--slate-dark);}
+nav.toolbar a, nav.toolbar button{font:600 10.5px 'Inter',sans-serif; letter-spacing:.06em; text-transform:uppercase;
+  color:#DCE3E7; background:transparent; border:0; padding:6px 10px; cursor:pointer; text-decoration:none; border-radius:2px;}
+nav.toolbar a:hover{background:rgba(255,255,255,.08); color:#fff;}
+nav.toolbar button.print-btn{margin-left:auto; background:var(--gold); color:#fff; padding:6px 16px;}
+nav.toolbar button.print-btn:hover{background:var(--gold-light);}
+nav.toolbar button.reset-btn{background:transparent; border:1px solid rgba(255,255,255,.35); color:#DCE3E7; padding:6px 14px; margin-left:6px;}
+nav.toolbar button.reset-btn:hover{background:rgba(255,255,255,.08); color:#fff; border-color:#fff;}
+
+/* ---------- Layout ---------- */
+main{max-width:1060px; margin:0 auto; padding:26px 28px 80px;}
+section.card{background:#fff; border:1px solid var(--hair); margin-bottom:26px;}
+.sec-head{background:var(--gold-deep); color:#fff; padding:8px 16px; display:flex; align-items:baseline; gap:12px;}
+.sec-head h2{font-family:'Cinzel',serif; font-size:12.5px; letter-spacing:.22em; font-weight:600; text-transform:uppercase;}
+.sec-head .hint{font-size:10.5px; color:#E8D9BE; margin-left:auto; letter-spacing:.02em;}
+.sec-body{padding:14px 16px 18px;}
+
+/* grid rows mirroring the workbook columns */
+.rowgrid{display:grid; grid-template-columns: 260px 150px 150px 110px 1fr; gap:0 14px; align-items:center;}
+.rowgrid.head{font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--slate);
+  border-bottom:2px solid var(--slate); padding:4px 0 6px; font-weight:600;}
+.rowgrid.r{padding:6px 0; border-bottom:1px solid #EFEAE1;}
+.rowgrid.r:last-child{border-bottom:0;}
+.rowgrid .lbl{font-weight:500; color:var(--slate-dark);}
+.rowgrid .lbl small{display:block; font-weight:400; color:#8B959C; font-size:11px;}
+.subhead{background:var(--slate); color:#fff; font-size:10.5px; letter-spacing:.16em; text-transform:uppercase;
+  font-weight:600; padding:5px 10px; margin:14px 0 8px;}
+.subhead:first-child{margin-top:0;}
+
+.calc{font-variant-numeric:tabular-nums; font-weight:600; color:var(--slate-dark);}
+.calc.money::before{content:''}
+.note{font-size:11px; color:#7C868D; line-height:1.4;}
+
+/* inputs */
+input[type=text],input[type=number],input[type=date],select{
+  width:100%; font:500 13px 'Inter',sans-serif; padding:5px 8px; border:1px solid #CFC7B8;
+  background:#FDFCF9; color:#8A2F1D; border-radius:2px;}
+input:focus,select:focus{outline:2px solid var(--gold-light); border-color:var(--gold);}
+input.clc{color:var(--slate-dark);}
+.inputs-note{font-size:11px; color:#8A2F1D; font-weight:500;}
+input.fmt-money,input.fmt-pct{text-align:right;}
+select option[value="Unknown"]{color:#8B959C;}
+.note b{color:#7C868D;}
+
+/* flags */
+.flag{display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.04em; padding:2px 8px; border-radius:2px; white-space:nowrap;}
+.flag.ok{background:#E4EFE8; color:var(--pass);}
+.flag.warn{background:#F6E4D7; color:var(--warn);}
+.flag.na{background:#EEEBE4; color:#8B959C;}
+
+/* pro forma comparison table */
+table.pf{width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums;}
+table.pf th{font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:#fff; background:var(--slate);
+  padding:5px 10px; text-align:right; font-weight:600;}
+table.pf th:first-child{text-align:left;}
+table.pf td{padding:5px 10px; border-bottom:1px solid #EFEAE1; text-align:right; font-size:13px;}
+table.pf td:first-child{text-align:left; font-weight:500; color:var(--slate-dark);}
+table.pf tr.total td{font-weight:700; border-top:2px solid var(--slate); border-bottom:2px solid var(--slate); background:#F6F3EC;}
+table.pf tr.subrow td:first-child{padding-left:22px; font-weight:400;}
+table.pf td.neg{color:var(--warn);}
+table.pf td.notecell{font-size:11px; color:#7C868D; text-align:left;}
+table.pf tr.bandrow td{background:var(--gold-deep); color:#fff; font-family:'Cinzel',serif; font-size:10.5px;
+  letter-spacing:.18em; text-transform:uppercase; text-align:left; padding:5px 10px;}
+
+/* AMI band table */
+table.ami{width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; margin-top:8px;}
+table.ami th{font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:#fff; background:var(--slate); padding:5px 8px; text-align:right; font-weight:600;}
+table.ami th:first-child{text-align:left;}
+table.ami td{padding:5px 8px; border-bottom:1px solid #EFEAE1; text-align:right; font-size:12.5px;}
+table.ami td:first-child{text-align:left; font-weight:500; color:var(--slate-dark);}
+table.ami tr.hh-row td{background:#F6F3EC; font-weight:600;}
+
+/* POH scenario switch */
+.scen{display:flex; gap:6px; margin-bottom:12px; align-items:center;}
+.scen button{font:600 11px 'Inter'; letter-spacing:.08em; text-transform:uppercase; padding:6px 16px;
+  border:1px solid var(--slate); background:#fff; color:var(--slate-dark); cursor:pointer; border-radius:2px;}
+.scen button.active{background:var(--slate-dark); color:#fff;}
+.scen .scen-note{font-size:11px; color:#7C868D; margin-left:8px;}
+
+.decision-box{display:flex; gap:16px; align-items:center; border:2px solid var(--gold); background:#FBF6ED;
+  padding:14px 18px; margin-top:14px;}
+.decision-box .dword{font-family:'Playfair Display',serif; font-size:26px; font-weight:700; color:var(--gold-deep);}
+.decision-box .dmeta{font-size:12px; color:var(--slate-dark); line-height:1.5;}
+
+/* callout */
+.callout{display:grid; grid-template-columns:130px 1fr; border:1px solid var(--gold-deep); margin-top:14px;}
+.callout .cl-label{background:var(--gold-deep); color:#fff; font-family:'Cinzel',serif; font-size:10px;
+  letter-spacing:.16em; display:flex; align-items:center; justify-content:center; padding:8px; text-align:center; text-transform:uppercase;}
+.callout .cl-body{padding:9px 12px; font-size:11.5px; color:var(--slate-dark); line-height:1.5;}
+
+/* ---------- Print summary ---------- */
+#printSummary{background:#fff; border:1px solid var(--hair);}
+.ps-head{background:var(--charcoal); color:#fff; padding:18px 22px; display:flex; align-items:center; gap:16px;}
+.ps-head .diamond{width:64px; height:32px; flex:0 0 64px;}
+.ps-head .diamond span{font-size:13px;}
+.ps-title h2{font-family:'Playfair Display',serif; font-size:20px; color:#fff;}
+.ps-title .ps-sub{font-family:'Cinzel',serif; font-size:9.5px; letter-spacing:.26em; color:var(--gold-light); text-transform:uppercase; margin-top:2px;}
+.ps-meta{margin-left:auto; text-align:right; font-size:10.5px; color:#B9C2C8; line-height:1.55;}
+.ps-body{padding:18px 22px;}
+.ps-sec{font-family:'Cinzel',serif; font-size:10.5px; letter-spacing:.2em; text-transform:uppercase;
+  background:var(--gold-deep); color:#fff; padding:4px 10px; margin:16px 0 8px;}
+.ps-sec:first-child{margin-top:0;}
+.ps-grid{display:grid; grid-template-columns:1fr 1fr; gap:0 30px;}
+.ps-kv{display:flex; justify-content:space-between; gap:10px; padding:3.5px 0; border-bottom:1px solid #EFEAE1; font-size:12px;}
+.ps-kv .k{color:var(--slate-dark); font-weight:500;}
+.ps-kv .v{font-weight:600; font-variant-numeric:tabular-nums; text-align:right; display:flex; gap:8px; align-items:center;}
+table.ps-pf{width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; font-size:11.5px;}
+table.ps-pf th{font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:#fff; background:var(--slate); padding:4px 8px; text-align:right;}
+table.ps-pf th:first-child{text-align:left;}
+table.ps-pf td{padding:3.5px 8px; border-bottom:1px solid #EFEAE1; text-align:right;}
+table.ps-pf td:first-child{text-align:left; font-weight:500; color:var(--slate-dark);}
+table.ps-pf tr.total td{font-weight:700; border-top:1.5px solid var(--slate); border-bottom:1.5px solid var(--slate); background:#F6F3EC;}
+.ps-verdict{display:flex; align-items:center; gap:14px; border:2.5px solid var(--gold); background:#FBF6ED; padding:12px 18px; margin-top:16px;}
+.ps-verdict .vword{font-family:'Playfair Display',serif; font-size:24px; font-weight:700;}
+.ps-verdict .vword.pass{color:var(--pass);} .ps-verdict .vword.fail{color:var(--warn);}
+.ps-verdict .vdetail{font-size:11.5px; color:var(--slate-dark); line-height:1.5;}
+.ps-notes{margin-top:14px; border:1px solid var(--hair); min-height:56px; padding:8px 10px; font-size:11.5px; color:var(--slate-dark);}
+.ps-footer{padding:8px 22px 14px; font-size:9.5px; color:#8B959C; border-top:1px solid var(--hair);
+  display:flex; justify-content:space-between; letter-spacing:.04em;}
+textarea#dealNotes{width:100%; min-height:64px; font:400 12px 'Inter'; padding:8px 10px; border:1px solid #CFC7B8; background:#FDFCF9; color:#8A2F1D; resize:vertical;}
+
+/* ---------- Print rules ---------- */
+@media print{
+  @page{size:letter; margin:.5in;}
+  body{background:#fff; font-size:11px;}
+  header.masthead, #verdictStrip, main > section.card:not(#printSummary), .no-print{display:none !important;}
+  main{padding:0; max-width:none;}
+  #printSummary{border:0;}
+  .ps-head{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  .ps-sec, table.ps-pf th, .flag, .diamond{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  .ps-body{padding:14px 0;}
+  .ps-verdict{break-inside:avoid;}
+  table.ps-pf, .ps-grid{break-inside:auto;}
+}
+@media (max-width:820px){
+  .rowgrid{grid-template-columns:1fr 130px 130px 90px; }
+  .rowgrid .note{display:none;}
+  .ps-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="mast-inner">
+    <div class="diamond" style="width:72px;height:36px;flex:0 0 72px;"><span style="font-size:15px;">CL</span></div>
+    <div class="mast-title">
+      <h1>Deal Screener</h1>
+      <div class="sub">Colton Lee Communities</div>
+    </div>
+    <div class="mast-meta">
+      Under 15 minutes from OM review &nbsp;|&nbsp; Purpose: go / no-go only<br>
+      <b style="color:#D4A865;">Red fields = your input.</b> Everything else computes live.
+    </div>
+  </div>
+</header>
+
+<div id="verdictStrip">
+  <div class="vs-inner">
+    <div class="vs-verdict">
+      <div class="diamond"><span>CL</span></div>
+      <div>
+        <div class="k" style="font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#C7CFD4;">Screen Verdict</div>
+        <div class="verdict-text" id="vsVerdict">—</div>
+      </div>
+    </div>
+    <div class="vs-cell"><div class="k">Cap Rate on Ask (Lot NOI)</div><div class="v" id="vsCap">—</div></div>
+    <div class="vs-cell"><div class="k">CLC Value @ 7% vs Ask</div><div class="v" id="vsGap">—</div></div>
+    <div class="vs-cell"><div class="k">Binary Flags</div><div class="v" id="vsFlags">—</div></div>
+    <div class="vs-cell"><div class="k">Convert or Hold</div><div class="v" id="vsPOH">—</div></div>
+  </div>
+  <nav class="toolbar">
+    <a href="#secA">A Property</a><a href="#secB">B Physical</a><a href="#secC">C Land</a>
+    <a href="#secD">D Income</a><a href="#secE">E Valuation</a><a href="#secF">F Affordability</a>
+    <a href="#secG">G Flags</a><a href="#secPF">H Pro Forma</a><a href="#secPOH">I POH Convert/Hold</a>
+    <a href="#printSummary">J Summary</a>
+    <input type="file" id="loadDealFile" accept="application/json" style="display:none" onchange="loadDeal(this.files[0])">
+    <button class="reset-btn" onclick="document.getElementById('loadDealFile').click()">Load Deal</button>
+    <button class="reset-btn" onclick="exportDeal()">Export Deal</button>
+    <button class="reset-btn" onclick="saveAsSnapshot()">Save As</button>
+    <button class="reset-btn" onclick="resetScreener()">Reset</button>
+    <button class="print-btn" onclick="window.print()">Print Summary</button>
+  </nav>
+</div>
+
+<main>
+
+<!-- ================= SECTION A ================= -->
+<section class="card" id="secA">
+  <div class="sec-head"><h2>A &nbsp;Property Identification</h2><span class="hint">From the OM cover and rent roll</span></div>
+  <div class="sec-body">
+    <div class="rowgrid head"><div>Line Item</div><div>Broker / OM</div><div></div><div></div><div>Note / Benchmark</div></div>
+    <div class="rowgrid r"><div class="lbl">Community Name</div><div><input type="text" id="in_name" value="Overbrook"></div><div></div><div></div><div class="note"></div></div>
+    <div class="rowgrid r"><div class="lbl">Market (City, State)</div><div><input type="text" id="in_market" value="Gaffney, SC"></div><div></div><div></div><div class="note"></div></div>
+    <div class="rowgrid r"><div class="lbl">Broker / Source</div><div><input type="text" id="in_broker" value="Capstone"></div><div></div><div></div><div class="note"></div></div>
+    <div class="rowgrid r"><div class="lbl">OM Date</div><div><input type="date" id="in_omdate"></div><div></div><div></div><div class="note"></div></div>
+    <div class="rowgrid r"><div class="lbl">Screener Date / By</div><div><input type="text" id="in_screenby" placeholder="7/3/26 / DA"></div><div></div><div></div><div class="note"></div></div>
+  </div>
+</section>
+
+<!-- ================= SECTION B ================= -->
+<section class="card" id="secB">
+  <div class="sec-head"><h2>B &nbsp;Physical Parameters</h2><span class="hint">Counts from the rent roll, never the OM summary</span></div>
+  <div class="sec-body">
+    <div class="rowgrid head"><div>Line Item</div><div>Broker / OM</div><div>CLC Calc</div><div>Flag</div><div>Note / Benchmark</div></div>
+    <div class="rowgrid r"><div class="lbl">Total Spaces</div><div><input type="number" id="in_totalSites" value="46"></div><div></div><div></div><div class="note">All homesites incl. vacant</div></div>
+    <div class="rowgrid r"><div class="lbl">Occupied Spaces</div><div><input type="number" id="in_occSites" value="45"></div><div></div><div></div><div class="note">From rent roll, not OM summary</div></div>
+    <div class="rowgrid r"><div class="lbl">Vacant Spaces (no home)</div><div></div><div class="calc" id="c_vacSites">—</div><div></div><div class="note">Total less occupied</div></div>
+    <div class="rowgrid r"><div class="lbl">Overall Park Occupancy</div><div></div><div class="calc" id="c_occ">—</div><div id="f_occ"></div><div class="note">Min 75% to proceed</div></div>
+    <div class="rowgrid r"><div class="lbl">Total Rental POH <small>units, not spaces</small></div><div><input type="number" id="in_pohCount" value="39"></div><div></div><div></div><div class="note">Total POH in community, occupied or vacant</div></div>
+    <div class="rowgrid r"><div class="lbl">POH % of All Spaces</div><div></div><div class="calc" id="c_pohPctAll">—</div><div id="f_pohPctAll"></div><div class="note">Physical concentration</div></div>
+    <div class="rowgrid r"><div class="lbl">POH % of Occupied Spaces</div><div></div><div class="calc" id="c_pohPctOcc">—</div><div id="f_pohPctOcc"></div><div class="note">Income concentration</div></div>
+    <div class="rowgrid r"><div class="lbl">Occupied Rental POH Units</div><div><input type="number" id="in_occPOH" value="39"></div><div></div><div></div><div class="note"></div></div>
+    <div class="rowgrid r"><div class="lbl">Vacant Rental POH Units</div><div></div><div class="calc" id="c_vacPOH">—</div><div id="f_vacPOH"></div><div class="note">Any vacant POH = zero lot rent AND zero home rent</div></div>
+    <div class="rowgrid r"><div class="lbl">POH Occupancy %</div><div></div><div class="calc" id="c_pohOcc">—</div><div id="f_pohOcc"></div><div class="note">Occupied POH ÷ total POH</div></div>
+    <div class="rowgrid r"><div class="lbl">Occupied POH % of Occupied Spaces</div><div></div><div class="calc" id="c_occPohPctOcc">—</div><div id="f_occPohPctOcc"></div><div class="note">POH rental income concentration</div></div>
+    <div class="rowgrid r"><div class="lbl">Agency POH Ceiling <small>Fannie / Freddie 25% max</small></div><div></div><div class="calc" id="c_agency">—</div><div id="f_agency"></div><div class="note">Above 25% closes the agency exit</div></div>
+    <div class="rowgrid r"><div class="lbl">Year Built</div><div><input type="number" id="in_yearBuilt" value="2014"></div><div></div><div id="f_year"></div><div class="note">Pre-1976 HUD = higher risk</div></div>
+    <div class="rowgrid r"><div class="lbl">Utility Type</div><div><select id="in_utility">
+      <option selected>Unknown</option><option>City W&amp;S</option><option>City Water Only</option><option>Well / Septic</option><option>Private WWTP</option><option>Mixed</option>
+    </select></div><div></div><div id="f_utility"></div><div class="note">City W&amp;S preferred. Well/septic = engineering + discount required</div></div>
+    <div class="rowgrid r"><div class="lbl">Road Condition</div><div><select id="in_road">
+      <option selected>Unknown</option><option>All Paved</option><option>Mostly Paved</option><option>Gravel</option><option>Poor</option>
+    </select></div><div></div><div id="f_road"></div><div class="note">Paved preferred. Gravel = capex reserve needed</div></div>
+    <div class="rowgrid r"><div class="lbl">Flood Zone</div><div><select id="in_flood">
+      <option selected>Unknown</option><option>No</option><option>Partial</option><option>Yes</option>
+    </select></div><div></div><div id="f_flood"></div><div class="note">Full/partial = flood insurance quote + lender haircut</div></div>
+    <div class="rowgrid r"><div class="lbl">Rent Control</div><div><select id="in_rentControl">
+      <option selected>Unknown</option><option>No</option><option>Yes</option><option>Pending</option>
+    </select></div><div></div><div id="f_rentControl"></div><div class="note">WA/NJ active caps. MN/WI pending. TX/FL/TN/IN = OK</div></div>
+    <div class="rowgrid r"><div class="lbl">Age Restriction</div><div><select id="in_age">
+      <option selected>Unknown</option><option>All Ages</option><option>55+</option>
+    </select></div><div></div><div id="f_age"></div><div class="note">All Ages = broader market. 55+ = restricted resale pool</div></div>
+    <div class="rowgrid r"><div class="lbl">Opportunity Zone</div><div><select id="in_oz">
+      <option selected>Unknown</option><option>No</option><option>Yes</option>
+    </select></div><div></div><div id="f_oz"></div><div class="note">May provide capital gains deferral. Verify via NMTC/CDFI map</div></div>
+  </div>
+</section>
+
+<!-- ================= SECTION C ================= -->
+<section class="card" id="secC">
+  <div class="sec-head"><h2>C &nbsp;Land &amp; Expansion</h2><span class="hint">Preliminary only, subject to zoning</span></div>
+  <div class="sec-body">
+    <div class="rowgrid head"><div>Line Item</div><div>Broker / OM</div><div>CLC Calc</div><div>Flag</div><div>Note / Benchmark</div></div>
+    <div class="rowgrid r"><div class="lbl">Total Site Area (acres)</div><div><input type="number" step="0.01" id="in_totalAcres" value="9.56"></div><div></div><div></div><div class="note">Total parcel area from survey or deed</div></div>
+    <div class="rowgrid r"><div class="lbl">Developed Area (acres)</div><div><input type="number" step="0.01" id="in_devAcres" value="6.56"></div><div></div><div></div><div class="note">Acres currently improved with homesites</div></div>
+    <div class="rowgrid r"><div class="lbl">Density (sites/acre, developed)</div><div></div><div class="calc" id="c_density">—</div><div></div><div class="note">Existing sites ÷ developed acres</div></div>
+    <div class="rowgrid r"><div class="lbl">Expansion Area (acres)</div><div></div><div class="calc" id="c_expAcres">—</div><div></div><div class="note">Total less developed</div></div>
+    <div class="rowgrid r"><div class="lbl">Est. Expansion Capacity (sites)</div><div></div><div class="calc" id="c_expCap">—</div><div></div><div class="note">Expansion acres × existing density. Preliminary, subject to zoning</div></div>
+  </div>
+</section>
+
+<!-- ================= SECTION D ================= -->
+<section class="card" id="secD">
+  <div class="sec-head"><h2>D &nbsp;Income, Quick Cap Rate Check</h2><span class="hint">Three streams, never blended</span></div>
+  <div class="sec-body">
+    <div class="subhead">D1 &nbsp;Land Lease Income</div>
+    <div class="rowgrid head"><div>Line Item</div><div>Broker / OM</div><div>CLC Calc</div><div>Flag</div><div>Note / Benchmark</div></div>
+    <div class="rowgrid r"><div class="lbl">Average Lot Rent, In Place ($/mo)</div><div><input type="text" inputmode="decimal" class="fmt-money" id="in_lotRent" value="200"></div><div></div><div></div><div class="note">Current in-place from rent roll</div></div>
+    <div class="rowgrid r"><div class="lbl">DATACOMP / Market Comp Rent ($/mo)</div><div><input type="text" inputmode="decimal" class="fmt-money" id="in_compRent" value="289"></div><div></div><div></div><div class="note">DATACOMP JLT primary; verified local market study where no coverage</div></div>
+    <div class="rowgrid r"><div class="lbl">Rent Gap vs. Market</div><div></div><div class="calc" id="c_rentGap">—</div><div id="f_rentGap"></div><div class="note">Target 15–35% below market. Under 15% = flag</div></div>
+    <div class="rowgrid r"><div class="lbl">CLC Quick Space NOI ($)</div><div></div><div class="calc" id="c_quickNOI">—</div><div></div><div class="note">Occ × rent × 12 × 96% × 65% (4% vacancy, 35% expense ratio). Estimate only</div></div>
+    <div class="subhead">D2 &nbsp;POH Lease Income</div>
+    <div class="rowgrid r"><div class="lbl">Average POH Rent, In Place ($/mo)</div><div><input type="text" inputmode="decimal" class="fmt-money" id="in_pohRent" value="528"></div><div></div><div></div><div class="note">Current in-place POH rent from rent roll</div></div>
+    <div class="rowgrid r"><div class="lbl">DATACOMP / Market Comp Rent ($/mo)</div><div><input type="text" inputmode="decimal" class="fmt-money" id="in_pohCompRent" value="528"></div><div></div><div></div><div class="note">DATACOMP JLT, required before proceeding</div></div>
+    <div class="rowgrid r"><div class="lbl">Rent Gap vs. Market</div><div></div><div class="calc" id="c_pohGap">—</div><div id="f_pohGap"></div><div class="note">Target 15–35% below market</div></div>
+    <div class="rowgrid r"><div class="lbl">CLC Quick POH NOI ($)</div><div></div><div class="calc" id="c_quickPOHNOI">—</div><div></div><div class="note">Occ × rent × 12 × 96% × 60% (4% vacancy, 40% expense ratio). Estimate only</div></div>
+    <div class="subhead">D3 &nbsp;Other Income</div>
+    <div class="rowgrid r"><div class="lbl">Average Other Income ($/mo)</div><div><input type="text" inputmode="decimal" class="fmt-money" id="in_otherIncome" value="950"></div><div></div><div></div><div class="note">Storage, laundry, apartments, billbacks</div></div>
+    <div class="rowgrid r"><div class="lbl">CLC Quick Other Income NOI ($)</div><div></div><div class="calc" id="c_otherNOI">—</div><div></div><div class="note">Annual × 96% × 55% (4% vacancy, 45% expense ratio). Estimate only</div></div>
+    <div class="subhead">D4 &nbsp;Gross NOI Summary</div>
+    <div class="rowgrid r"><div class="lbl">CLC Total Economic NOI <small>three streams combined</small></div><div></div><div class="calc" id="c_combinedNOI">—</div><div></div><div class="note">Verify durability and lender treatment of non-lot income</div></div>
+    <div class="rowgrid r"><div class="lbl">Non-Lot Income as % of Lot NOI</div><div></div><div class="calc" id="c_nonLotPct">—</div><div id="f_nonLot"></div><div class="note">Total economic NOI should be within 25% of lot NOI</div></div>
+  </div>
+</section>
+
+<!-- ================= SECTION E ================= -->
+<section class="card" id="secE">
+  <div class="sec-head"><h2>E &nbsp;Valuation</h2><span class="hint">Land lease NOI only, POH valued separately</span></div>
+  <div class="sec-body">
+    <div class="rowgrid head"><div>Line Item</div><div>Broker / OM</div><div>CLC Calc</div><div>Flag</div><div>Note / Benchmark</div></div>
+    <div class="rowgrid r"><div class="lbl">Asking Price</div><div><input type="text" inputmode="decimal" class="fmt-money" id="in_askPrice" value="2900000"></div><div></div><div></div><div class="note"></div></div>
+    <div class="rowgrid r"><div class="lbl">Asking Price per Space</div><div></div><div class="calc" id="c_askPerSpace">—</div><div id="f_askPerSpace"></div><div class="note">Flagship Q1 26: ~$61K/lot (institutional)</div></div>
+    <div class="rowgrid r"><div class="lbl">CLC Value @ 7% Cap, lot rent only</div><div></div><div class="calc" id="c_val7">—</div><div></div><div class="note">CLC minimum: 7.0% going-in on land lease NOI</div></div>
+    <div class="rowgrid r"><div class="lbl">CLC Value @ 8% Cap, lot rent only</div><div></div><div class="calc" id="c_val8">—</div><div></div><div class="note">Conservative entry</div></div>
+    <div class="rowgrid r"><div class="lbl">CLC Cap Rate on Ask</div><div></div><div class="calc" id="c_capOnAsk">—</div><div id="f_capOnAsk"></div><div class="note">Must be at least 7.0% to proceed</div></div>
+    <div class="rowgrid r"><div class="lbl">Economic Cap Rate on Ask</div><div></div><div class="calc" id="c_econCap">—</div><div></div><div class="note">All three income streams ÷ ask</div></div>
+    <div class="rowgrid r"><div class="lbl">Ask vs. CLC @ 7%</div><div></div><div class="calc" id="c_askVs7">—</div><div id="f_askVs7"></div><div class="note">Positive = room; negative = overpaying at 7%</div></div>
+    <div class="rowgrid r"><div class="lbl">CLC Price per Space</div><div></div><div class="calc" id="c_clcPerSpace">—</div><div id="f_clcPerSpace"></div><div class="note">7% cap on space NOI. CLC target: $30–55K</div></div>
+  </div>
+</section>
+
+<!-- ================= SECTION F ================= -->
+<section class="card" id="secF">
+  <div class="sec-head"><h2>F &nbsp;Affordability Ceiling</h2><span class="hint">HUD 30% cost-burden standard, AMI band analysis</span></div>
+  <div class="sec-body">
+    <div class="rowgrid head"><div>Line Item</div><div>Broker / OM</div><div>CLC Calc</div><div>Flag</div><div>Note / Benchmark</div></div>
+    <div class="rowgrid r"><div class="lbl">Median HH Income, 100% AMI (county, $/yr)</div><div><input type="text" inputmode="decimal" class="fmt-money" id="in_medianInc" value="80707"></div><div></div><div></div><div class="note">Census ACS B19013 or HUD Income Limits, required. <b>Confirm household size:</b> HUD publishes AMI by household size (1–8 persons); use the 4-person figure unless the resident base skews smaller, in which case use the size-adjusted HUD figure</div></div>
+    <div class="rowgrid r"><div class="lbl">30% Monthly Threshold, at 100% AMI</div><div></div><div class="calc" id="c_threshold">—</div><div></div><div class="note">HUD standard, full county median</div></div>
+    <div class="rowgrid r"><div class="lbl">Est. Resident Home Payment ($/mo)</div><div><input type="text" inputmode="decimal" class="fmt-money" id="in_homePmt" value="450"></div><div></div><div></div><div class="note">Avg chattel payment, typically $200–$400</div></div>
+    <div class="rowgrid r"><div class="lbl">Max Sustainable Lot Rent, at 100% AMI</div><div></div><div class="calc" id="c_maxLotRent">—</div><div id="f_maxLotRent"></div><div class="note">Ceiling: threshold minus home payment. Tract median only, see bands below</div></div>
+
+    <div class="subhead" style="margin-top:16px;">AMI Band Analysis — Test Against Very Low / Low, Not the Tract Median</div>
+    <div class="rowgrid r"><div class="note" style="grid-column:1/-1; padding:2px 0 6px;">MHC residents concentrate in the lower income bands of the surrounding area. Test the escalation runway against the Very Low and Low bands, not the tract median. Verify the community's actual band mix via resident income documentation (applications, lease files) during due diligence; discount the escalation assumption where the verified mix is weaker than the county profile.</div></div>
+    <table class="ami" id="amiTable"></table>
+  </div>
+</section>
+
+<!-- ================= SECTION G ================= -->
+<section class="card" id="secG">
+  <div class="sec-head"><h2>G &nbsp;Five Binary Flags, All Must Clear</h2><span class="hint">Answer each YES / NO</span></div>
+  <div class="sec-body">
+    <div class="rowgrid head"><div>Flag</div><div>Answer</div><div></div><div>Result</div><div>Note</div></div>
+    <div class="rowgrid r"><div class="lbl">Flag 1: Occupancy ≥ 75%?</div><div><select id="in_flag1"><option selected>Unknown</option><option>YES</option><option>NO</option></select></div><div></div><div id="f_flag1"></div><div class="note">At acquisition. Below 75% requires DATACOMP demand confirmation</div></div>
+    <div class="rowgrid r"><div class="lbl">Flag 2: City utilities (or priced for alt)?</div><div><select id="in_flag2"><option selected>Unknown</option><option>YES</option><option>NO</option></select></div><div></div><div id="f_flag2"></div><div class="note">Well/septic OK only with engineering + material price discount</div></div>
+    <div class="rowgrid r"><div class="lbl">Flag 3: Rents below DATACOMP comps?</div><div><select id="in_flag3"><option selected>Unknown</option><option>YES</option><option>NO</option></select></div><div></div><div id="f_flag3"></div><div class="note">DATACOMP verification required, broker comps insufficient</div></div>
+    <div class="rowgrid r"><div class="lbl">Flag 4: No material flood zone?</div><div><select id="in_flag4"><option selected>Unknown</option><option>YES</option><option>NO</option></select></div><div></div><div id="f_flag4"></div><div class="note">Material flood = insurance quote + FEMA review + lender haircut</div></div>
+    <div class="rowgrid r"><div class="lbl">Flag 5: No active rent control?</div><div><select id="in_flag5"><option selected>Unknown</option><option>YES</option><option>NO</option></select></div><div></div><div id="f_flag5"></div><div class="note">City/county level check. WA, NJ, CA, OR = auto-fail</div></div>
+    <div class="rowgrid r"><div class="lbl"><b>Flags Passed</b></div><div></div><div class="calc" id="c_flagsPassed">—</div><div id="f_flagsAll"></div><div class="note">All 5 must pass to proceed cleanly</div></div>
+  </div>
+</section>
+
+<!-- ================= QUICK PRO FORMA ================= -->
+<section class="card" id="secPF">
+  <div class="sec-head"><h2>H &nbsp;Quick Pro Forma, Broker vs. CLC</h2><span class="hint">Land lease only, never blend POH</span></div>
+  <div class="sec-body">
+    <div class="subhead">Broker / OM Stated Inputs</div>
+    <div class="rowgrid head"><div>Field</div><div>Value</div><div></div><div></div><div>Where to find in OM</div></div>
+    <div class="rowgrid r"><div class="lbl">Proforma Lot Rent Y1 ($/mo)</div><div><input type="text" inputmode="decimal" class="fmt-money" id="in_brkRentY1" value="241"></div><div></div><div></div><div class="note">Broker projected Y1 rent. Use in-place if not stated separately</div></div>
+    <div class="rowgrid r"><div class="lbl">Vacancy / Bad Debt / Concession (%)</div><div><input type="text" inputmode="decimal" class="fmt-pct" id="in_brkVac" value="6"></div><div></div><div></div><div class="note">% of GPR. Brokers typically 5–7%. Placeholder ~4% unless the OM states otherwise</div></div>
+    <div class="rowgrid r"><div class="lbl">Broker Expense Line Items ($/yr)</div><div></div><div></div><div></div><div class="note">Enter 0 if not broken out; use override below for lump sums</div></div>
+    <div class="rowgrid r"><div class="lbl" style="padding-left:16px;">R&amp;M / Contract / Payroll</div>
+      <div><input type="text" inputmode="decimal" class="fmt-money" id="in_brkRM" value="0" placeholder="R&M"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-money" id="in_brkContract" value="0" placeholder="Contract"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-money" id="in_brkPayroll" value="0" placeholder="Payroll"></div><div class="note"></div></div>
+    <div class="rowgrid r"><div class="lbl" style="padding-left:16px;">Insurance / RE Taxes / Utilities</div>
+      <div><input type="text" inputmode="decimal" class="fmt-money" id="in_brkIns" value="0"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-money" id="in_brkTax" value="0"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-money" id="in_brkUtil" value="0"></div><div class="note"></div></div>
+    <div class="rowgrid r"><div class="lbl" style="padding-left:16px;">G&amp;A / Utility Plant / Mgmt Fee %</div>
+      <div><input type="text" inputmode="decimal" class="fmt-money" id="in_brkGA" value="0"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-money" id="in_brkPlant" value="0"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct" id="in_brkMgmtPct" value="0" placeholder="% EGI"></div><div class="note">Mgmt fee as % of EGI</div></div>
+    <div class="rowgrid r"><div class="lbl">Total OpEx Override ($ or % of EGI)</div>
+      <div><input type="text" inputmode="decimal" class="fmt-money" id="in_brkOpexD" value="0" placeholder="$"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct" id="in_brkOpexPct" value="35" placeholder="%"></div>
+      <div></div><div class="note">Overrides line items if either is above zero. $ takes priority over %</div></div>
+    <div class="rowgrid r"><div class="lbl">Broker Stated NOI / Cap Rate <small>compare only</small></div>
+      <div><input type="text" inputmode="decimal" class="fmt-money" id="in_brkStatedNOI" value="0"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct" id="in_brkStatedCap" value="0"></div>
+      <div id="f_brkStated"></div><div class="note">Flag if gap to calculated broker NOI exceeds 5%</div></div>
+    <div class="rowgrid r"><div class="lbl">Broker POH: Exp Ratio / Cap Rate</div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct" id="in_brkPOHExpR" value="35"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct" id="in_brkPOHCap" value="10"></div>
+      <div></div><div class="note">Broker applied, e.g. for POH: 35% expense ratio, 10% cap rate</div></div>
+
+    <div class="subhead">CLC Standard Assumptions, override per deal</div>
+    <div class="rowgrid r"><div class="lbl">CLC Assumed Rent ($/mo)</div><div><input type="text" inputmode="decimal" class="fmt-money clc" id="in_clcRent" value="200"></div><div></div><div></div><div class="note">Defaults to in-place rent. CLC rule: never broker proforma</div></div>
+    <div class="rowgrid r"><div class="lbl">Vacancy / Bad Debt / Expense Ratio / Mgmt Fee</div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct clc" id="in_clcVac" value="6"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct clc" id="in_clcExpR" value="35"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct clc" id="in_clcMgmt" value="2.5"></div>
+      <div class="note">CLC standards, placeholders unless deal-specific knowledge overrides: bad debt ~4%, expense ratio ~35%, mgmt fee ~2.5%</div></div>
+    <div class="rowgrid r"><div class="lbl">Cap Rate Floor / Ceiling</div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct clc" id="in_capFloor" value="7.5"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct clc" id="in_capCeil" value="8.5"></div>
+      <div></div><div class="note">Going-in minimum / conservative entry target</div></div>
+    <div class="rowgrid r"><div class="lbl">POH Valuation Method</div>
+      <div><select id="in_pohMethod" class="clc"><option selected>Unknown</option><option>Income</option><option>Note</option><option>Chattel</option></select></div>
+      <div></div><div></div><div class="note">Drives the value selected into the combined summary</div></div>
+    <div class="rowgrid r"><div class="lbl">POH: Chattel Value per Home ($)</div>
+      <div><input type="text" inputmode="decimal" class="fmt-money clc" id="in_chattelVal" value="35000"></div>
+      <div></div><div></div>
+      <div class="note">Resale/appraised value per home (Method 3, liquidation reference). Independent of the income/cap rate approach below. Placeholder ~$22K–$35K unless DATACOMP, MHVillage, or a dealer quote confirms otherwise</div></div>
+    <div class="rowgrid r"><div class="lbl">POH: Expense Ratio / Cap Rate</div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct clc" id="in_clcPOHExpR" value="40"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct clc" id="in_clcPOHCap" value="12"></div>
+      <div></div>
+      <div class="note">CLC POH expense ratio (Method 1, typically 55–65% of home revenue); CLC POH cap rate (Method 1, typically 10–12%). Placeholders unless a specific POH condition assessment or comp set says otherwise. These drive the income/cap rate valuation only, not the chattel value above</div></div>
+    <div class="rowgrid r"><div class="lbl">POH Note: Assumed Pmt / Term (yrs) / Rate</div>
+      <div><input type="text" inputmode="decimal" class="fmt-money clc" id="in_clcPOHPmt" value="464.62"></div>
+      <div><input type="number" id="in_clcPOHTerm" value="15" class="clc"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct clc" id="in_clcPOHRate" value="12"></div>
+      <div class="note">Assumed house payment once POH converts to TOH</div></div>
+    <div class="rowgrid r"><div class="lbl">Debt: LTC / Rate / Amortization (yrs)</div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct clc" id="in_ltc" value="50"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct clc" id="in_debtRate" value="6.5"></div>
+      <div><input type="number" id="in_amort" value="25" class="clc"></div>
+      <div class="note">CLC standards, placeholders unless the lender quote says otherwise: 50% LTC, 6.5% rate, 25-year amortization</div></div>
+
+    <div class="subhead" style="margin-top:20px;">Comparison, Broker / OM vs. CLC Underwritten</div>
+    <table class="pf" id="pfTable"></table>
+    <div class="callout"><div class="cl-label">Guardrail</div><div class="cl-body">
+      POH and RTO income is excluded from land lease NOI and the land lease cap rate. It is valued separately by the selected
+      method: Income = as-is rental economics; Note = only after conversion under the POH Seasoning Policy (Business Plan
+      Section VIII); Chattel = liquidation reference. Never blend the streams.</div></div>
+  </div>
+</section>
+
+<!-- ================= POH CONVERT OR HOLD ================= -->
+<section class="card" id="secPOH">
+  <div class="sec-head"><h2>I &nbsp;POH Convert or Hold</h2><span class="hint">Per-unit NPV, default-adjusted</span></div>
+  <div class="sec-body">
+    <div class="scen">
+      <button id="scDown" onclick="setScenario('Downside')">Downside</button>
+      <button id="scBase" class="active" onclick="setScenario('Base')">Base</button>
+      <button id="scUp" onclick="setScenario('Upside')">Upside</button>
+      <span class="scen-note">Presets load the scenario column; any field can then be edited per deal.</span>
+    </div>
+    <div class="rowgrid head"><div>Input</div><div>Value</div><div></div><div></div><div>Definition</div></div>
+    <div class="rowgrid r"><div class="lbl">Home Rent ($/mo)</div><div><input type="text" inputmode="decimal" class="fmt-money" id="in_pcHomeRent" value="400"></div><div></div><div></div><div class="note">Monthly home rent per unit</div></div>
+    <div class="rowgrid r"><div class="lbl">Maintenance Cost ($/mo)</div><div><input type="text" inputmode="decimal" class="fmt-money" id="in_pcMaint" value="150"></div><div></div><div></div><div class="note">Monthly maintenance cost per unit</div></div>
+    <div class="rowgrid r"><div class="lbl">Note Rate / Note Term (yrs)</div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct" id="in_pcRate" value="10"></div>
+      <div><input type="number" id="in_pcTerm" value="12"></div><div></div><div class="note">Seller-financed note on conversion</div></div>
+    <div class="rowgrid r"><div class="lbl">Cap POH (blended) / Cap TOH (target)</div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct" id="in_pcCapPOH" value="10"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct" id="in_pcCapTOH" value="7"></div><div></div><div class="note">Current blended cap on POH-heavy park vs. clean TOH park</div></div>
+    <div class="rowgrid r"><div class="lbl">Lot Rent ($/mo) / Expense Ratio</div>
+      <div><input type="text" inputmode="decimal" class="fmt-money" id="in_pcLotRent" value="250"></div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct" id="in_pcExpR" value="38"></div><div></div><div class="note">Park lot rent and expense ratio</div></div>
+    <div class="rowgrid r"><div class="lbl">Discount Rate / Deal Term (yrs)</div>
+      <div><input type="text" inputmode="decimal" class="fmt-pct" id="in_pcDRate" value="9"></div>
+      <div><input type="number" id="in_pcDealTerm" value="10"></div><div></div><div class="note">Hold period for the NPV comparison</div></div>
+    <div class="rowgrid r"><div class="lbl">Note Default Rate (annual)</div><div><input type="text" inputmode="decimal" class="fmt-pct" id="in_pcDefault" value="4"></div><div></div><div></div><div class="note">Primary swing variable. Stress-test on every POH deal. Placeholder ~4% unless resident payment history/tenure data supports a different figure</div></div>
+
+    <div class="subhead" style="margin-top:16px;">Per-Unit Results</div>
+    <div class="rowgrid head"><div>Metric</div><div></div><div>Value</div><div></div><div>Definition</div></div>
+    <div class="rowgrid r"><div class="lbl">Implied Note Principal per Unit</div><div></div><div class="calc" id="c_pohNote">—</div><div></div><div class="note">PV of home rent at note rate over note term</div></div>
+    <div class="rowgrid r"><div class="lbl">Year 1 Note Interest per Unit</div><div></div><div class="calc" id="c_pohYr1Int">—</div><div></div><div class="note">Cumulative interest, months 1–12</div></div>
+    <div class="rowgrid r"><div class="lbl">Cap Compression Gain per Unit</div><div></div><div class="calc" id="c_pohCapGain">—</div><div></div><div class="note">Lot NOI at TOH cap less at POH cap</div></div>
+    <div class="rowgrid r"><div class="lbl">Path A NPV, hold as rental</div><div></div><div class="calc" id="c_pathA">—</div><div></div><div class="note">PV of net rent over hold plus terminal value</div></div>
+    <div class="rowgrid r"><div class="lbl">Path B NPV, convert to note <small>pre-default</small></div><div></div><div class="calc" id="c_pathB">—</div><div></div><div class="note">PV of interest + principal recovery + maintenance savings + cap gain</div></div>
+    <div class="rowgrid r"><div class="lbl">Path B NPV, default-adjusted</div><div></div><div class="calc" id="c_pathBAdj">—</div><div></div><div class="note">Path B × (1 − default)^(term/2)</div></div>
+    <div class="rowgrid r"><div class="lbl">MBR / Cap Spread <small>quick triggers</small></div><div></div><div class="calc" id="c_triggers">—</div><div id="f_triggers"></div><div class="note">MBR &gt; 35% and spread &gt; 150 bps = convert; MBR &lt; 25% and spread &lt; 100 bps = hold</div></div>
+    <div class="rowgrid r"><div class="lbl">Home-Level Expense Shed / Net Benefit</div><div></div><div class="calc" id="c_expShed">—</div><div></div><div class="note">Maintenance + turnover + PP tax, less note servicing</div></div>
+
+    <div class="decision-box">
+      <div class="diamond" style="width:60px;height:30px;flex:0 0 60px;"><span>CL</span></div>
+      <div>
+        <div class="dword" id="c_pohDecision">—</div>
+        <div class="dmeta" id="c_pohDecisionMeta">—</div>
+      </div>
+    </div>
+    <div class="callout"><div class="cl-label">Seasoning Policy</div><div class="cl-body">
+      No conversion closes earlier than Month 24 post-acquisition (Month 36 preferred) absent written HCVT guidance. Dealer
+      characterization and installment method eligibility under IRC 453(l), and recapture acceleration under 453(i), are open
+      HCVT priority items. Deferring conversion benefits two to three years moves marginal units from CONVERT to HOLD; run this
+      model with the seasoning delay in mind. Business Plan v8, Section VIII.</div></div>
+  </div>
+</section>
+
+<!-- ================= PRINT SUMMARY ================= -->
+<section class="card" id="printSummary">
+  <div class="ps-head">
+    <div class="diamond"><span>CL</span></div>
+    <div class="ps-title">
+      <h2>J &nbsp;Deal Summary</h2>
+      <div class="ps-sub">Colton Lee Communities · Preliminary Screen · Internal Use</div>
+    </div>
+    <div class="ps-meta" id="ps_meta">—</div>
+  </div>
+  <div class="ps-body">
+
+    <div class="ps-sec">A &nbsp;Property Identification</div>
+    <div class="ps-grid">
+      <div>
+        <div class="ps-kv"><span class="k">Community Name</span><span class="v" id="ps_name">—</span></div>
+        <div class="ps-kv"><span class="k">Market</span><span class="v" id="ps_market">—</span></div>
+        <div class="ps-kv"><span class="k">Broker / Source</span><span class="v" id="ps_broker">—</span></div>
+        <div class="ps-kv"><span class="k">Year Built</span><span class="v" id="ps_year">—</span></div>
+        <div class="ps-kv"><span class="k">Age Restriction</span><span class="v" id="ps_age">—</span></div>
+        <div class="ps-kv"><span class="k">Road Condition</span><span class="v" id="ps_road">—</span></div>
+      </div>
+      <div>
+        <div class="ps-kv"><span class="k">Total Area / Expansion</span><span class="v" id="ps_area">—</span></div>
+        <div class="ps-kv"><span class="k">Est. Expansion Capacity</span><span class="v" id="ps_expcap">—</span></div>
+        <div class="ps-kv"><span class="k">Utilities</span><span class="v" id="ps_utility">—</span></div>
+        <div class="ps-kv"><span class="k">Flood Zone</span><span class="v" id="ps_flood">—</span></div>
+        <div class="ps-kv"><span class="k">Rent Control</span><span class="v" id="ps_rc">—</span></div>
+        <div class="ps-kv"><span class="k">Opportunity Zone</span><span class="v" id="ps_oz">—</span></div>
+      </div>
+    </div>
+
+    <div class="ps-sec">B &nbsp;Physical Snapshot</div>
+    <div class="ps-grid">
+      <div>
+        <div class="ps-kv"><span class="k">Total Spaces</span><span class="v" id="ps_sites">—</span></div>
+        <div class="ps-kv"><span class="k">Occupied Spaces / Occupancy</span><span class="v" id="ps_occ">—</span></div>
+        <div class="ps-kv"><span class="k">POH Units / POH Occupancy</span><span class="v" id="ps_poh">—</span></div>
+      </div>
+      <div>
+        <div class="ps-kv"><span class="k">POH % of All Spaces</span><span class="v" id="ps_pohpct">—</span></div>
+        <div class="ps-kv"><span class="k">Agency POH Ceiling (25% max)</span><span class="v" id="ps_agency">—</span></div>
+        <div class="ps-kv"><span class="k">POH Income Concentration</span><span class="v" id="ps_pohinc">—</span></div>
+      </div>
+    </div>
+
+    <div class="ps-sec">C &nbsp;Pro Forma Comparison, Broker / OM vs. CLC Underwritten</div>
+    <table class="ps-pf" id="ps_pfTable"></table>
+
+    <div class="ps-sec">D &nbsp;POH Valuation, Three-Method Triangulation (CLC)</div>
+    <table class="ps-pf" id="ps_pohTable"></table>
+
+    <div class="ps-sec">E &nbsp;Combined Valuation vs. Ask</div>
+    <table class="ps-pf" id="ps_valTable"></table>
+
+    <div class="ps-sec">F &nbsp;Debt Service Quick Check &nbsp;·&nbsp; Affordability Ceiling</div>
+    <div class="ps-grid">
+      <div>
+        <div class="ps-kv"><span class="k">Loan Amount (LTC × Ask)</span><span class="v" id="ps_loan">—</span></div>
+        <div class="ps-kv"><span class="k">Annual Debt Service, IO Year 1</span><span class="v" id="ps_io">—</span></div>
+        <div class="ps-kv"><span class="k">Annual Debt Service, P&amp;I Years 2+</span><span class="v" id="ps_pi">—</span></div>
+        <div class="ps-kv"><span class="k">DSCR (CLC lot NOI ÷ P&amp;I)</span><span class="v" id="ps_dscr">—</span></div>
+      </div>
+      <div>
+        <div class="ps-kv"><span class="k">Median HH Income (county)</span><span class="v" id="ps_inc">—</span></div>
+        <div class="ps-kv"><span class="k">30% Monthly Threshold</span><span class="v" id="ps_thresh">—</span></div>
+        <div class="ps-kv"><span class="k">Est. Resident Home Payment</span><span class="v" id="ps_homepmt">—</span></div>
+        <div class="ps-kv"><span class="k">Max Sustainable Lot Rent vs. In-Place</span><span class="v" id="ps_maxrent">—</span></div>
+      </div>
+    </div>
+
+    <div class="ps-sec">G &nbsp;Five Binary Flags &nbsp;·&nbsp; POH Convert or Hold</div>
+    <div class="ps-grid">
+      <div id="ps_flags"></div>
+      <div>
+        <div class="ps-kv"><span class="k">Path A NPV per Unit (hold)</span><span class="v" id="ps_pathA">—</span></div>
+        <div class="ps-kv"><span class="k">Path B NPV per Unit (default-adj.)</span><span class="v" id="ps_pathB">—</span></div>
+        <div class="ps-kv"><span class="k">Advantage per Unit / Portfolio</span><span class="v" id="ps_adv">—</span></div>
+        <div class="ps-kv"><span class="k">Model Decision (default-adjusted)</span><span class="v" id="ps_decision">—</span></div>
+        <div class="ps-kv"><span class="k">Seasoning Policy Gate</span><span class="v" style="font-weight:500;">No conversion before Month 24–36 (BP §VIII)</span></div>
+      </div>
+    </div>
+
+    <div class="ps-verdict">
+      <div class="diamond" style="width:60px;height:30px;flex:0 0 60px;"><span>CL</span></div>
+      <div>
+        <div class="vword" id="ps_verdict">—</div>
+        <div class="vdetail" id="ps_verdictDetail">—</div>
+      </div>
+    </div>
+
+    <div class="ps-sec" style="margin-top:16px;">H &nbsp;Deal Notes / OM Anomalies / Override Rationale</div>
+    <div class="no-print"><textarea id="dealNotes" placeholder="Notes entered here appear on the printed summary."></textarea></div>
+    <div class="ps-notes" id="ps_notes" style="display:none;"></div>
+
+  </div>
+  <div class="ps-footer">
+    <span>Colton Lee Communities, Inc. · CLC Internal Use Only · Deal Screener v8 (HTML)</span>
+    <span>Preliminary screen only. Full DD required. DATACOMP mandatory. If PROCEED, open CLC Financial Model.</span>
+  </div>
+</section>
+
+</main>
+
+<script>
+'use strict';
+// ---------- helpers ----------
+const $ = id => document.getElementById(id);
+// raw numeric parse, strips $ , % and whitespace so formatted display fields still parse
+const num = id => { const raw=$(id).value; const v = parseFloat(String(raw).replace(/[,$%\s]/g,'')); return isFinite(v) ? v : 0; };
+// percent-field helper: fields with class fmt-pct store a whole-number percent (7.5 = 7.5%); returns the decimal (0.075) for formulas
+const pct = id => num(id)/100;
+const txt = id => $(id).value.trim();
+const fmt$ = (v,d=0) => isFinite(v) ? (v<0?'-':'')+'$'+Math.abs(v).toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d}) : '—';
+const fmtP = (v,d=1) => isFinite(v) ? (v*100).toFixed(d)+'%' : '—';
+const fmtN = (v,d=1) => isFinite(v) ? v.toLocaleString('en-US',{maximumFractionDigits:d}) : '—';
+const flag = (ok, okText, warnText) => `<span class="flag ${ok?'ok':'warn'}">${ok?okText:warnText}</span>`;
+const set = (id, html) => { const el=$(id); if(el) el.innerHTML = html; };
+
+// ---------- formatted input display (money / percent) ----------
+// Money fields (class fmt-money): display as $1,234. Percent fields (class fmt-pct): display as 7.5%.
+function formatFieldDisplay(el){
+  const v = parseFloat(String(el.value).replace(/[,$%\s]/g,''));
+  if(!isFinite(v)){ return; }
+  if(el.classList.contains('fmt-money')){
+    el.value = (v<0?'-':'')+'$'+Math.abs(v).toLocaleString('en-US',{maximumFractionDigits:2});
+  } else if(el.classList.contains('fmt-pct')){
+    el.value = (Math.round(v*1000)/1000)+'%';
+  }
+}
+function unformatFieldForEdit(el){
+  const v = parseFloat(String(el.value).replace(/[,$%\s]/g,''));
+  el.value = isFinite(v) ? v : '';
+}
+function initFormattedFields(){
+  document.querySelectorAll('input.fmt-money, input.fmt-pct').forEach(el=>{
+    formatFieldDisplay(el);
+    el.addEventListener('focus', ()=> unformatFieldForEdit(el));
+    el.addEventListener('blur', ()=> formatFieldDisplay(el));
+  });
+}
+
+// PV of an annuity payment: principal = pmt * (1-(1+r)^-n)/r
+const pvAnnuity = (pmt, rPer, n) => rPer===0 ? pmt*n : pmt*(1-Math.pow(1+rPer,-n))/rPer;
+// annual payment on a loan (monthly compounding), returns annual P&I
+const annualPI = (principal, annRate, amortYrs) => {
+  const r = annRate/12, n = amortYrs*12;
+  if (principal<=0||r<=0) return 0;
+  return principal*(r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1)*12;
+};
+// cumulative interest paid between months m1..m2 on level-payment note
+function cumInterest(principal, annRate, termYrs, m1, m2){
+  const r = annRate/12, n = termYrs*12;
+  if (principal<=0||r<=0||m1>n) return 0;
+  const pmt = principal*r/(1-Math.pow(1+r,-n));
+  let bal = principal, tot=0;
+  for(let m=1; m<=Math.min(m2,n); m++){
+    const i = bal*r; const p = pmt-i; bal-=p;
+    if(m>=m1) tot+=i;
+  }
+  return tot;
+}
+
+// ---------- POH scenario presets ----------
+// Rate fields stored as whole percents (10 = 10%) to match fmt-pct display convention
+const SCEN = {
+  Downside:{HomeRent:360, Maint:180, Rate:12, Term:15, CapPOH:12, CapTOH:7.5, LotRent:225, DRate:11, DealTerm:10, ExpR:45, Default:6},
+  Base:    {HomeRent:400, Maint:150, Rate:10, Term:12, CapPOH:10, CapTOH:7.0, LotRent:250, DRate:9,  DealTerm:10, ExpR:38, Default:4},
+  Upside:  {HomeRent:450, Maint:120, Rate:9,  Term:10, CapPOH:9,  CapTOH:6.5, LotRent:275, DRate:8,  DealTerm:7,  ExpR:32, Default:2},
+};
+function setScenario(name){
+  const s = SCEN[name];
+  $('in_pcHomeRent').value=s.HomeRent; $('in_pcMaint').value=s.Maint; $('in_pcRate').value=s.Rate;
+  $('in_pcTerm').value=s.Term; $('in_pcCapPOH').value=s.CapPOH; $('in_pcCapTOH').value=s.CapTOH;
+  $('in_pcLotRent').value=s.LotRent; $('in_pcExpR').value=s.ExpR; $('in_pcDRate').value=s.DRate;
+  $('in_pcDealTerm').value=s.DealTerm; $('in_pcDefault').value=s.Default;
+  ['in_pcHomeRent','in_pcMaint','in_pcRate','in_pcCapPOH','in_pcCapTOH','in_pcLotRent','in_pcExpR','in_pcDRate','in_pcDefault']
+    .forEach(id=> formatFieldDisplay($(id)));
+  ['scDown','scBase','scUp'].forEach(b=>$(b).classList.remove('active'));
+  $({Downside:'scDown',Base:'scBase',Upside:'scUp'}[name]).classList.add('active');
+  recalc();
+}
+
+// ---------- master recalc ----------
+function recalc(){
+  // ===== STEP 1 =====
+  const totalSites=num('in_totalSites'), occSites=num('in_occSites'), pohCount=num('in_pohCount'), occPOH=num('in_occPOH');
+  const vacSites = totalSites-occSites;
+  const occPct = totalSites? occSites/totalSites : 0;
+  const pohPctAll = totalSites? pohCount/totalSites : 0;
+  const pohPctOcc = occSites? pohCount/occSites : 0;
+  const vacPOH = Math.max(pohCount-occPOH,0);
+  const pohOccPct = pohCount? occPOH/pohCount : 0;
+  const occPohPctOcc = occSites? occPOH/occSites : 0;
+  const agency = totalSites? pohCount/totalSites : 0;
+
+  set('c_vacSites', fmtN(vacSites,0));
+  set('c_occ', fmtP(occPct));  set('f_occ', flag(occPct>=0.75,'✓','⚠ <75%'));
+  set('c_pohPctAll', fmtP(pohPctAll)); set('f_pohPctAll', flag(pohPctAll<=0.30,'✓','⚠ >30% POH'));
+  set('c_pohPctOcc', fmtP(pohPctOcc)); set('f_pohPctOcc', flag(pohPctOcc<=0.30,'✓','⚠ >30% POH'));
+  set('c_vacPOH', fmtN(vacPOH,0)); set('f_vacPOH', flag(vacPOH<1,'✓','⚠ Critical Issue'));
+  set('c_pohOcc', fmtP(pohOccPct)); set('f_pohOcc', flag(pohOccPct>=1,'✓','⚠ Vacant POH'));
+  set('c_occPohPctOcc', fmtP(occPohPctOcc)); set('f_occPohPctOcc', flag(occPohPctOcc<=0.30,'✓','⚠ >30% POH'));
+  set('c_agency', fmtP(agency)); set('f_agency', flag(agency<=0.25,'✓ Agency OK','⚠ >25% No Agency'));
+  set('f_year', $('in_yearBuilt').value===''?'<span class="flag na">— Unknown</span>':flag(num('in_yearBuilt')>=1976,'✓','⚠ Pre-1976'));
+  const util = $('in_utility').value;
+  set('f_utility', util==='Unknown' ? '<span class="flag na">— Unknown</span>' : (util==='City W&S' ? flag(true,'✓','') : flag(false,'','⚠ Review')));
+  const road = $('in_road').value;
+  set('f_road', road==='Unknown' ? '<span class="flag na">— Unknown</span>' : (road==='All Paved'?flag(true,'✓',''):(road==='Mostly Paved'?'<span class="flag na">~ OK</span>':flag(false,'','⚠ Capex'))));
+  const flood = $('in_flood').value;
+  set('f_flood', flood==='Unknown' ? '<span class="flag na">— Unknown</span>' : flag(flood==='No','✓','⚠ Flood'));
+  const rc = $('in_rentControl').value;
+  set('f_rentControl', rc==='Unknown' ? '<span class="flag na">— Unknown</span>' : flag(rc==='No','✓','⚠ Reg Risk'));
+  const ageVal = $('in_age').value;
+  set('f_age', ageVal==='Unknown' ? '<span class="flag na">— Unknown</span>' : (ageVal==='All Ages'?flag(true,'✓ All Ages',''):flag(true,'✓ 55+','')));
+  const ozVal = $('in_oz').value;
+  set('f_oz', ozVal==='Yes'?'<span class="flag na">✓ OZ, note in UW</span>':(ozVal==='Unknown'?'<span class="flag na">— Unknown</span>':'<span class="flag na">—</span>'));
+
+  // Land & expansion
+  const totalAcres=num('in_totalAcres'), devAcres=num('in_devAcres');
+  const density = devAcres? totalSites/devAcres : 0;
+  const expAcres = Math.max(totalAcres-devAcres,0);
+  const expCap = Math.round(expAcres*density);
+  set('c_density', fmtN(density,2)); set('c_expAcres', fmtN(expAcres,2)); set('c_expCap', fmtN(expCap,0));
+
+  // Income quick check (STEP 1 constants preserved: 96% economic occ; 65/60/55 NOI complements)
+  const lotRent=num('in_lotRent'), compRent=num('in_compRent');
+  const rentGap = compRent? 1-lotRent/compRent : 0;
+  const quickNOI = occSites*lotRent*12*0.96*0.65;
+  const pohRent=num('in_pohRent'), pohCompRent=num('in_pohCompRent');
+  const pohGap = pohCompRent? 1-pohRent/pohCompRent : 0;
+  const quickPOHNOI = occPOH*pohRent*12*0.96*0.60;
+  const otherMo=num('in_otherIncome');
+  const otherNOI = otherMo*12*0.96*0.55;
+  const combinedNOI = quickNOI+quickPOHNOI+otherNOI;
+  const nonLotPct = quickNOI? (combinedNOI-quickNOI)/quickNOI : 0;
+  set('c_rentGap', fmtP(rentGap)); set('f_rentGap', flag(rentGap>=0.15,'✓ Gap','⚠ <15%'));
+  set('c_quickNOI', fmt$(quickNOI));
+  set('c_pohGap', fmtP(pohGap)); set('f_pohGap', flag(pohGap>=0.15,'✓ Gap','⚠ <15%'));
+  set('c_quickPOHNOI', fmt$(quickPOHNOI));
+  set('c_otherNOI', fmt$(otherNOI));
+  set('c_combinedNOI', fmt$(combinedNOI));
+  set('c_nonLotPct', fmtP(nonLotPct)); set('f_nonLot', flag(nonLotPct<=0.25,'✓','⚠ >25%'));
+
+  // Valuation
+  const ask=num('in_askPrice');
+  const askPerSpace = totalSites? ask/totalSites : 0;
+  const val7 = quickNOI/0.07, val8 = quickNOI/0.08;
+  const capOnAsk = ask? quickNOI/ask : 0;
+  const econCap = ask? combinedNOI/ask : 0;
+  const askVs7 = val7-ask;
+  const clcPerSpace = totalSites? val7/totalSites : 0;
+  set('c_askPerSpace', fmt$(askPerSpace)); set('f_askPerSpace', flag(askPerSpace<=61000,'✓ Cushion','⚠ Overpay'));
+  set('c_val7', fmt$(val7)); set('c_val8', fmt$(val8));
+  set('c_capOnAsk', fmtP(capOnAsk,2)); set('f_capOnAsk', flag(capOnAsk>=0.07,'✓ ≥7%','⚠ <7%'));
+  set('c_econCap', fmtP(econCap,2));
+  set('c_askVs7', fmt$(askVs7)); set('f_askVs7', flag(askVs7>=0,'✓ Cushion','⚠ Overpay'));
+  set('c_clcPerSpace', fmt$(clcPerSpace)); set('f_clcPerSpace', flag(clcPerSpace<=55000,'✓ Cushion','⚠ Overpay'));
+
+  // Affordability
+  const inc=num('in_medianInc'), homePmt=num('in_homePmt');
+  const threshold = inc/12*0.3, maxLot = threshold-homePmt;
+  set('c_threshold', fmt$(threshold,0)); set('c_maxLotRent', fmt$(maxLot,0));
+  set('f_maxLotRent', flag(lotRent<maxLot,'✓ Below','⚠ At/Above'));
+
+  // AMI Band Analysis — Extremely Low (30%), Very Low (50%), Low (80%), Moderate (120%)
+  const amiBands = [
+    {label:'Extremely Low Income', pct:0.30},
+    {label:'Very Low Income',      pct:0.50},
+    {label:'Low Income',           pct:0.80},
+    {label:'Moderate Income',      pct:1.20},
+  ];
+  let amiH = `<tr><th style="width:24%">Income Band</th><th>% of AMI</th><th>Annual Income</th><th>30% Monthly Threshold</th><th>Max Sustainable Lot Rent</th></tr>`;
+  amiBands.forEach(b=>{
+    const annualInc = inc*b.pct;
+    const monthlyThresh = annualInc/12*0.3;
+    const maxRentBand = monthlyThresh-homePmt;
+    amiH += `<tr><td>${b.label}</td><td>${fmtP(b.pct,0)}</td><td>${fmt$(annualInc,0)}</td><td>${fmt$(monthlyThresh,0)}</td><td>${fmt$(maxRentBand,0)}</td></tr>`;
+  });
+  amiH += `<tr class="hh-row"><td>In-Place Lot Rent (this deal)</td><td colspan="3"></td><td>${fmt$(lotRent,0)}</td></tr>`;
+  $('amiTable').innerHTML = amiH;
+
+  // Binary flags
+  const flagVals = [1,2,3,4,5].map(i => $('in_flag'+i).value);
+  const flags = flagVals.map(v => v==='YES');
+  flagVals.forEach((v,i)=> set('f_flag'+(i+1), v==='Unknown' ? '<span class="flag na">— Unknown</span>' : flag(v==='YES','✓ PASS','⚠ FAIL')));
+  const passed = flags.filter(Boolean).length;
+  set('c_flagsPassed', passed+' / 5'); set('f_flagsAll', flag(passed===5,'✓ ALL CLEAR','⚠ INCOMPLETE'));
+
+  // Verdict
+  const proceed = capOnAsk>=0.07 && passed===5;
+  const vEl = $('vsVerdict');
+  vEl.textContent = proceed ? '✓ PROCEED — Meets CLC criteria' : '✗ FAIL — Does not meet CLC criteria';
+  vEl.className = 'verdict-text ' + (proceed?'pass':'fail');
+  set('vsCap', fmtP(capOnAsk,2));
+  set('vsGap', fmt$(askVs7));
+  set('vsFlags', passed+' / 5');
+
+  // ===== STEP 2 PRO FORMA =====
+  const brkY1=num('in_brkRentY1'), brkVac=pct('in_brkVac');
+  const clcRent=num('in_clcRent'), clcVac=pct('in_clcVac'), clcExpR=pct('in_clcExpR');
+  const gprB = brkY1*totalSites*12;
+  const gprC = occSites*clcRent*12;
+  const vacB = -gprB*brkVac, vacC = -gprC*clcVac;
+  const othB = otherMo*12, othC = otherMo*12;
+  const egiB = gprB+vacB+othB, egiC = gprC+vacC+othC;
+  const items = ['in_brkRM','in_brkContract','in_brkPayroll','in_brkIns','in_brkTax','in_brkUtil','in_brkGA','in_brkPlant'].map(num);
+  const mgmtB = egiB*pct('in_brkMgmtPct');
+  const ovD=num('in_brkOpexD'), ovP=pct('in_brkOpexPct');
+  const opexB = ovD>0 ? -ovD : (ovP>0 ? -egiB*ovP : -(items.reduce((a,b)=>a+b,0)+mgmtB));
+  const opexC = -egiC*clcExpR;
+  const noiB = egiB+opexB, noiC = egiC*(1-clcExpR);
+  const expRB = egiB? -opexB/egiB:0, expRC = clcExpR;
+
+  // Broker stated NOI cross-check
+  const statedNOI = num('in_brkStatedNOI');
+  if(statedNOI>0){
+    const gap = Math.abs(statedNOI-noiB)/noiB;
+    set('f_brkStated', flag(gap<=0.05,'✓ ≤5%','⚠ >5% gap'));
+  } else set('f_brkStated','<span class="flag na">—</span>');
+
+  // POH valuation, three methods
+  const brkPOHExpR=pct('in_brkPOHExpR'), brkPOHCap=pct('in_brkPOHCap');
+  const clcPOHPmt=num('in_clcPOHPmt'), clcPOHTerm=num('in_clcPOHTerm'), clcPOHRate=pct('in_clcPOHRate');
+  const clcPOHExpR=pct('in_clcPOHExpR'), clcPOHCap=pct('in_clcPOHCap'), chattel=num('in_chattelVal');
+  const pcDefault = pct('in_pcDefault');
+  const m1B = brkPOHCap? (pohCount*pohOccPct*pohRent*12)*(1-brkVac)*(1-brkPOHExpR)/brkPOHCap : 0;
+  const m1C = clcPOHCap? (pohCount*pohOccPct*clcPOHPmt*12)*(1-clcVac)*(1-clcPOHExpR)/clcPOHCap : 0;
+  const notePerHome = pvAnnuity(clcPOHPmt, clcPOHRate/12, clcPOHTerm*12);
+  const m2C = notePerHome*Math.round(pohCount*pohOccPct)*Math.pow(1-pcDefault, clcPOHTerm/2);
+  const m3C = chattel*pohCount;
+  const method = $('in_pohMethod').value;
+  const pohValB = m1B;
+  const pohValC = method==='Chattel'? m3C : method==='Note'? m2C : m1C;
+  const spread = Math.max(m1C,m2C,m3C)-Math.min(m1C,m2C,m3C);
+
+  // Combined values
+  const capFloor=pct('in_capFloor'), capCeil=pct('in_capCeil');
+  const landFloorB=noiB/capFloor, landFloorC=noiC/capFloor;
+  const landCeilB=noiB/capCeil, landCeilC=noiC/capCeil;
+  const combB=landFloorB+pohValB, combC=landFloorC+pohValC;
+  const combCeilB=landCeilB+pohValB, combCeilC=landCeilC+pohValC;
+
+  // Debt (Step 2 convention: LTC on asking price)
+  const ltc=pct('in_ltc'), dRate=pct('in_debtRate'), amort=num('in_amort');
+  const loan=ask*ltc, io=loan*dRate, pi=annualPI(loan,dRate,amort);
+  const dscr = pi? noiC/pi : 0;
+
+  // Render pro forma table
+  const D=(b,c)=>c-b;
+  const row=(lbl,b,c,cls='',noteTxt='')=>`<tr class="${cls}"><td>${lbl}</td><td>${b}</td><td>${c}</td><td>${noteTxt}</td></tr>`;
+  const m=(v,d=0)=>fmt$(v,d);
+  let h = `<tr><th style="width:34%">Line Item</th><th>Broker / OM</th><th>CLC Underwritten</th><th style="width:26%; text-align:left;">Note</th></tr>`;
+  h += `<tr class="bandrow"><td colspan="4">Revenue</td></tr>`;
+  h += row('Gross Potential Rent (annual)', m(gprB), m(gprC), '', `<span class="notecell">Broker: total sites × proforma rent. CLC: occupied × in-place</span>`);
+  h += row('Less: Vacancy / Bad Debt', `<span class="neg">${m(vacB)}</span>`, `<span class="neg">${m(vacC)}</span>`);
+  h += row('Other Income (annual)', m(othB), m(othC));
+  h += row('Effective Gross Income', m(egiB), m(egiC), 'total');
+  h += `<tr class="bandrow"><td colspan="4">Operating Expenses</td></tr>`;
+  h += row('Total Operating Expenses', `<span class="neg">${m(opexB)}</span>`, `<span class="neg">${m(opexC)}</span>`, '', `<span class="notecell">Broker: line items or override. CLC: single expense ratio</span>`);
+  h += row('Expense Ratio (% of EGI)', fmtP(expRB), fmtP(expRC));
+  h += row('Net Operating Income, land lease only', m(noiB), m(noiC), 'total', `<span class="notecell">${noiB>noiC?'OM exceeds CLC underwriting':'CLC at or above OM'}</span>`);
+  h += `<tr class="bandrow"><td colspan="4">POH Valuation, separate from land lease NOI</td></tr>`;
+  h += row('M1 Income: net income ÷ POH cap', m(m1B), m(m1C));
+  h += row('M2 Note: PV of converted payments, default-adj.', '—', m(m2C), '', `<span class="notecell">Only after seasoning window</span>`);
+  h += row('M3 Chattel: assigned value × homes', '—', m(m3C));
+  h += row(`POH Value, selected method (${method})`, m(pohValB), m(pohValC), 'total', `<span class="notecell">Triangulation spread: ${m(spread)}</span>`);
+  h += `<tr class="bandrow"><td colspan="4">Combined Value Summary</td></tr>`;
+  h += row(`Land Lease Value @ ${(capFloor*100).toFixed(1)}% floor cap`, m(landFloorB), m(landFloorC));
+  h += row(`Land Lease Value @ ${(capCeil*100).toFixed(1)}% ceiling cap`, m(landCeilB), m(landCeilC));
+  h += row('Combined Value, park + POH (floor)', m(combB), m(combC), 'total');
+  h += row('Asking Price', m(ask), m(ask));
+  h += row('$ Gap vs. Ask (floor)', m(combB-ask), m(combC-ask), '', `<span class="notecell">Negative = ask exceeds value</span>`);
+  h += row('Price per Space', m(combB/totalSites||0), m(combC/totalSites||0), '', `<span class="notecell">Ask/space: ${m(askPerSpace)}</span>`);
+  h += `<tr class="bandrow"><td colspan="4">Debt Service Quick Check (${(ltc*100).toFixed(0)}% LTC on ask, ${(dRate*100).toFixed(1)}%, ${amort}-yr am)</td></tr>`;
+  h += row('Loan Amount', m(loan), m(loan));
+  h += row('Annual Debt Service, IO Year 1', m(io), m(io));
+  h += row('Annual Debt Service, P&I Years 2+', m(pi), m(pi));
+  h += row('DSCR (CLC lot NOI ÷ P&I)', '—', fmtN(dscr,2), 'total');
+  $('pfTable').innerHTML = h;
+
+  // ===== POH CONVERT OR HOLD =====
+  const H=num('in_pcHomeRent'), M=num('in_pcMaint'), r=pct('in_pcRate'), n=num('in_pcTerm');
+  const capPOH=pct('in_pcCapPOH'), capTOH=pct('in_pcCapTOH'), lot=num('in_pcLotRent');
+  const d=pct('in_pcDRate'), t=num('in_pcDealTerm'), expR=pct('in_pcExpR'), def=pct('in_pcDefault');
+  const pohNote = pvAnnuity(H, r/12, n*12);
+  const yr1Int = cumInterest(pohNote, r, n, 1, 12);
+  const maintAnn = M*12;
+  const capGain = capTOH&&capPOH ? (lot*12*(1-expR))/capTOH-(lot*12*(1-expR))/capPOH : 0;
+  // Path A: PV of net rent annuity + terminal at POH cap
+  const pathA = pvAnnuity((H-M)*12, d, t) + ((H-M)*12/capPOH)/Math.pow(1+d,t);
+  // Path B: PV of yearly interest over min(deal, note) years + PV principal + PV maintenance savings + PV cap gain
+  let pvInt=0;
+  for(let y=1; y<=Math.min(t,n); y++){
+    const iy = cumInterest(pohNote, r, n, (y-1)*12+1, y*12);
+    pvInt += iy/Math.pow(1+d,y);
+  }
+  const pvPrin = pohNote/Math.pow(1+d, Math.min(t,n));
+  const pvMaint = pvAnnuity(maintAnn, d, t);
+  const pvCapGain = capGain/Math.pow(1+d,t);
+  const pathB = pvInt+pvPrin+pvMaint+pvCapGain;
+  const pathBAdj = pathB*Math.pow(1-def, t/2);
+  const decision = pathBAdj>pathA ? 'CONVERT' : 'HOLD';
+  const advantage = Math.abs(pathBAdj-pathA);
+  const mbr = H? M/H:0, capSpread = capPOH-capTOH;
+  const trigger = (mbr>0.35&&capSpread>0.015)?'CONVERT, both triggers met':(mbr<0.25&&capSpread<0.01)?'HOLD, both triggers failed':'RUN FULL MODEL';
+  const shed = maintAnn + H*0.5*0.33 + H*12*0.05;
+  const svc = pohNote*0.01;
+
+  set('c_pohNote', fmt$(pohNote));
+  set('c_pohYr1Int', fmt$(yr1Int));
+  set('c_pohCapGain', fmt$(capGain));
+  set('c_pathA', fmt$(pathA));
+  set('c_pathB', fmt$(pathB));
+  set('c_pathBAdj', fmt$(pathBAdj));
+  set('c_triggers', 'MBR '+fmtP(mbr)+' / spread '+(capSpread*10000).toFixed(0)+' bps');
+  set('f_triggers', `<span class="flag ${trigger.startsWith('RUN')?'na':(trigger.startsWith('CONVERT')?'ok':'warn')}">${trigger.split(',')[0]}</span>`);
+  set('c_expShed', fmt$(shed)+' / '+fmt$(shed-svc)+' net');
+  set('c_pohDecision', decision);
+  set('c_pohDecisionMeta', `Default-adjusted Path B ${fmt$(pathBAdj)} vs Path A ${fmt$(pathA)} per unit. Advantage ${fmt$(advantage)}/unit, ${fmt$(advantage*pohCount)} across ${fmtN(pohCount,0)} homes. Quick triggers: ${trigger}.`);
+  set('vsPOH', decision);
+
+  // ===== PRINT SUMMARY =====
+  const today = new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+  set('ps_meta', `${txt('in_name')||'—'} · ${txt('in_market')||'—'}<br>Screened ${txt('in_screenby')||today}`);
+  set('ps_name', txt('in_name')||'—'); set('ps_market', txt('in_market')||'—'); set('ps_broker', txt('in_broker')||'—');
+  set('ps_year', num('in_yearBuilt')||'—'); set('ps_age', $('in_age').value); set('ps_road', $('in_road').value);
+  set('ps_area', fmtN(totalAcres,2)+' ac / '+fmtN(expAcres,2)+' ac expansion');
+  set('ps_expcap', fmtN(expCap,0)+' sites @ '+fmtN(density,1)+'/ac');
+  set('ps_utility', util); set('ps_flood', $('in_flood').value); set('ps_rc', $('in_rentControl').value); set('ps_oz', $('in_oz').value);
+  set('ps_sites', fmtN(totalSites,0)+' spaces');
+  set('ps_occ', fmtN(occSites,0)+' @ '+fmtP(occPct)+' '+flag(occPct>=0.75,'✓','⚠ <75%'));
+  set('ps_poh', fmtN(pohCount,0)+' units @ '+fmtP(pohOccPct)+' '+(vacPOH>=1?flag(false,'','⚠ Vacant POH'):flag(true,'✓','')));
+  set('ps_pohpct', fmtP(pohPctAll)+' '+flag(pohPctAll<=0.25,'✓','⚠ >25%'));
+  set('ps_agency', fmtP(agency)+' '+flag(agency<=0.25,'✓ Agency OK','⚠ No Agency'));
+  const pohIncConc = (quickPOHNOI+quickNOI)? quickPOHNOI/(quickPOHNOI+quickNOI):0;
+  set('ps_pohinc', fmtP(pohIncConc)+' '+flag(pohIncConc<0.25,'✓','⚠ >25%'));
+
+  // PS pro forma table
+  let ph = `<tr><th style="width:40%">Line Item</th><th>Broker / OM</th><th>CLC Analysis</th><th>Delta (CLC − Broker)</th></tr>`;
+  const prow=(l,b,c,cls='')=>`<tr class="${cls}"><td>${l}</td><td>${b}</td><td>${c}</td><td>${typeof b==='string'&&b==='—'?'—':''}</td></tr>`;
+  const drow=(l,b,c,cls='')=>`<tr class="${cls}"><td>${l}</td><td>${m(b)}</td><td>${m(c)}</td><td>${m(c-b)}</td></tr>`;
+  ph += drow('Gross Potential Rent (annual)', gprB, gprC);
+  ph += drow('Less: Vacancy / Bad Debt', vacB, vacC);
+  ph += drow('Other Income (annual)', othB, othC);
+  ph += drow('Effective Gross Income', egiB, egiC, 'total');
+  ph += drow('Less: Total Operating Expenses', opexB, opexC);
+  ph += `<tr><td>Expense Ratio</td><td>${fmtP(expRB)}</td><td>${fmtP(expRC)}</td><td>${fmtP(expRC-expRB)}</td></tr>`;
+  ph += drow('Net Operating Income, land lease only', noiB, noiC, 'total');
+  $('ps_pfTable').innerHTML = ph;
+
+  let th = `<tr><th style="width:40%">Method</th><th>Per Unit</th><th>Total (${fmtN(pohCount,0)} homes)</th><th>Selected</th></tr>`;
+  const un=(v)=> pohCount? fmt$(v/pohCount):'—';
+  th += `<tr><td>M1 Income: net income ÷ ${fmtP(clcPOHCap)} cap</td><td>${un(m1C)}</td><td>${m(m1C)}</td><td>${method==='Income'?'●':''}</td></tr>`;
+  th += `<tr><td>M2 Note: PV of payments, default-adjusted</td><td>${un(m2C)}</td><td>${m(m2C)}</td><td>${method==='Note'?'●':''}</td></tr>`;
+  th += `<tr><td>M3 Chattel: ${m(chattel)} × homes</td><td>${un(m3C)}</td><td>${m(m3C)}</td><td>${method==='Chattel'?'●':''}</td></tr>`;
+  th += `<tr class="total"><td>POH Portfolio Value, selected (${method})</td><td>${un(pohValC)}</td><td>${m(pohValC)}</td><td>Spread ${m(spread)}</td></tr>`;
+  $('ps_pohTable').innerHTML = th;
+
+  let vh = `<tr><th style="width:40%">Line Item</th><th>@ ${(capFloor*100).toFixed(1)}% Floor</th><th>@ ${(capCeil*100).toFixed(1)}% Ceiling</th><th>Flag</th></tr>`;
+  vh += `<tr><td>Land Lease Value (CLC NOI)</td><td>${m(landFloorC)}</td><td>${m(landCeilC)}</td><td></td></tr>`;
+  vh += `<tr><td>+ POH Valuation (selected)</td><td>${m(pohValC)}</td><td>${m(pohValC)}</td><td></td></tr>`;
+  vh += `<tr class="total"><td>Combined CLC Valuation</td><td>${m(combC)}</td><td>${m(combCeilC)}</td><td></td></tr>`;
+  vh += `<tr><td>Asking Price</td><td>${m(ask)}</td><td>${m(ask)}</td><td>${flag(combC>=ask,'✓ Room','⚠ Ask exceeds value')}</td></tr>`;
+  vh += `<tr><td>$ Gap vs. Ask</td><td>${m(combC-ask)}</td><td>${m(combCeilC-ask)}</td><td></td></tr>`;
+  vh += `<tr><td>CLC Price per Space vs. Ask ${m(askPerSpace)}</td><td>${m(combC/totalSites||0)}</td><td>${m(combCeilC/totalSites||0)}</td><td>${flag((combC/totalSites||0)<=55000,'✓ <$55K','⚠ >$55K')}</td></tr>`;
+  vh += `<tr class="total"><td>CLC Cap Rate on Ask, lot NOI (quick screen)</td><td colspan="2">${fmtP(capOnAsk,2)}</td><td>${flag(capOnAsk>=0.07,'✓ ≥7%','⚠ <7%')}</td></tr>`;
+  $('ps_valTable').innerHTML = vh;
+
+  set('ps_loan', fmt$(loan)); set('ps_io', fmt$(io)); set('ps_pi', fmt$(pi));
+  set('ps_dscr', fmtN(dscr,2)+'x');
+  set('ps_inc', fmt$(inc)); set('ps_thresh', fmt$(threshold,0)+'/mo'); set('ps_homepmt', fmt$(homePmt)+'/mo');
+  set('ps_maxrent', fmt$(maxLot,0)+' vs '+fmt$(lotRent)+' '+flag(lotRent<maxLot,'✓ Below','⚠ At/Above'));
+
+  const flagNames=['Occupancy ≥ 75%','City utilities (or priced for alt)','Rents below DATACOMP comps','No material flood zone','No active rent control'];
+  set('ps_flags', flags.map((f,i)=>`<div class="ps-kv"><span class="k">Flag ${i+1}: ${flagNames[i]}</span><span class="v">${$('in_flag'+(i+1)).value} ${flag(f,'✓ PASS','⚠ FAIL')}</span></div>`).join('')
+    + `<div class="ps-kv"><span class="k"><b>Flags Passed</b></span><span class="v"><b>${passed} / 5</b></span></div>`);
+  set('ps_pathA', fmt$(pathA)); set('ps_pathB', fmt$(pathBAdj));
+  set('ps_adv', fmt$(advantage)+' / '+fmt$(advantage*pohCount));
+  set('ps_decision', `<b>${decision}</b>`);
+
+  const pv = $('ps_verdict');
+  pv.textContent = proceed ? '✓ PROCEED' : '✗ FAIL';
+  pv.className = 'vword ' + (proceed?'pass':'fail');
+  set('ps_verdictDetail', proceed
+    ? `Meets CLC screening criteria: cap rate on ask ${fmtP(capOnAsk,2)} (≥7.0%) and all five binary flags clear. Next step: full DD, DATACOMP verification, open CLC Financial Model.`
+    : `Does not meet CLC criteria: cap rate on ask ${fmtP(capOnAsk,2)} (minimum 7.0%) and ${passed}/5 binary flags passed. Document override rationale below if proceeding.`);
+
+  // notes mirror
+  const notes = $('dealNotes').value.trim();
+  const pn = $('ps_notes');
+  pn.textContent = notes || 'No notes entered.';
+}
+
+// print: show notes div, hide textarea handled by CSS (.no-print); make notes visible in print
+window.addEventListener('beforeprint', ()=>{ $('ps_notes').style.display='block'; recalc(); });
+window.addEventListener('afterprint', ()=>{ $('ps_notes').style.display='none'; });
+
+// ---------- reset ----------
+// Fields in KEEP_DEFAULTS are CLC standard assumptions (vacancy, expense ratio, mgmt fee, cap rates,
+// POH standard assumptions, debt policy) that should remain populated as guidance after a reset, since
+// they represent CLC house standards rather than deal-specific inputs. Their original default values
+// are captured on page load, before any editing, so "Reset" restores the guidance figure even if the
+// person had typed something else.
+const KEEP_DEFAULTS_IDS = [
+  'in_clcVac','in_clcExpR','in_clcMgmt','in_capFloor','in_capCeil',
+  'in_clcPOHExpR','in_clcPOHCap','in_clcPOHTerm','in_clcPOHRate',
+  'in_ltc','in_debtRate','in_amort',
+  'in_pcRate','in_pcTerm','in_pcCapPOH','in_pcCapTOH','in_pcExpR','in_pcDRate','in_pcDealTerm','in_pcDefault',
+  'in_chattelVal','in_clcPOHPmt',
+];
+const DEFAULTS_SNAPSHOT = {};
+KEEP_DEFAULTS_IDS.forEach(id=>{ const el=$(id); if(el) DEFAULTS_SNAPSHOT[id]=el.value; });
+
+function resetScreener(){
+  if(!confirm('Reset all deal-specific inputs? CLC standard assumptions (vacancy, expense ratio, mgmt fee, cap rates, POH and debt defaults) will remain populated as guidance. This cannot be undone.')) return;
+
+  document.querySelectorAll('input[type=text], input[type=number], input[type=date]').forEach(el=>{
+    if(KEEP_DEFAULTS_IDS.includes(el.id)){
+      el.value = DEFAULTS_SNAPSHOT[el.id] !== undefined ? DEFAULTS_SNAPSHOT[el.id] : el.value;
+    } else {
+      el.value = '';
+    }
+  });
+  // Selects: everything reverts to Unknown (first option) except CLC standard POH method, which is a
+  // standing preference rather than a per-deal fact — but with no per-deal answer yet, Unknown is safer,
+  // so all selects including POH method reset to Unknown.
+  document.querySelectorAll('select').forEach(el=>{ el.value='Unknown'; });
+  $('dealNotes').value = '';
+
+  initFormattedFields();
+  recalc();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ---------- deal file naming ----------
+function slugify(s){
+  return String(s||'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+}
+function sanitizeFilenamePart(s){
+  return String(s||'').trim().replace(/[\\/:*?"<>|]/g,'-');
+}
+function dealJsonFilename(){
+  const base = [slugify($('in_name').value), slugify($('in_market').value)].filter(Boolean).join('-');
+  return (base || 'clc-deal-export') + '.json';
+}
+function dealHtmlFilename(){
+  const label = [sanitizeFilenamePart($('in_name').value), sanitizeFilenamePart($('in_market').value)].filter(Boolean).join(', ');
+  return 'CLC_Deal_Screener_' + (label || 'Untitled') + '.html';
+}
+function downloadBlob(filename, content, mimeType){
+  const blob = new Blob([content], {type: mimeType});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+// ---------- Export Deal: input values only, as a small JSON file ----------
+// Re-running this through a later master template's engine is the point: only raw inputs
+// are captured, so updated calculation logic always applies on Load.
+function collectDealFields(){
+  const fields = {};
+  document.querySelectorAll('input[id]:not(#loadDealFile), select[id], textarea[id]').forEach(el=>{
+    fields[el.id] = el.value;
+  });
+  return fields;
+}
+function exportDeal(){
+  const payload = {
+    _meta: {
+      screener: 'CLC Deal Screener v9',
+      exportedAt: new Date().toISOString(),
+      name: $('in_name').value || '',
+      market: $('in_market').value || '',
+    },
+    fields: collectDealFields(),
+  };
+  downloadBlob(dealJsonFilename(), JSON.stringify(payload, null, 2), 'application/json');
+}
+
+// ---------- Load Deal: repopulate every field from a previously exported JSON file ----------
+function loadDeal(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let payload;
+    try { payload = JSON.parse(reader.result); }
+    catch(e){ alert('That file is not valid JSON. Load aborted.'); return; }
+    const fields = (payload && typeof payload.fields === 'object') ? payload.fields : payload;
+    if(!fields || typeof fields !== 'object'){ alert('That file does not look like a CLC Deal Screener export. Load aborted.'); return; }
+    Object.keys(fields).forEach(id=>{
+      if(id === 'loadDealFile') return;
+      const el = $(id);
+      if(el) el.value = fields[id];
+    });
+    initFormattedFields();
+    recalc();
+    window.scrollTo({top:0, behavior:'smooth'});
+  };
+  reader.onerror = () => alert('Could not read that file.');
+  reader.readAsText(file);
+  document.getElementById('loadDealFile').value = '';
+}
+
+// ---------- Save As: a standalone copy of the whole tool with this deal's values baked in ----------
+// Freezes both the data AND the current calculation logic into the downloaded file — a clean
+// archival snapshot, distinct from Export Deal which stays tied to whatever engine loads it later.
+function saveAsSnapshot(){
+  const clone = document.documentElement.cloneNode(true);
+  document.querySelectorAll('input[id]:not(#loadDealFile), select[id], textarea[id]').forEach(live=>{
+    const target = clone.querySelector('#'+live.id);
+    if(!target) return;
+    if(target.tagName === 'SELECT'){
+      Array.from(target.options).forEach(opt=>{
+        opt.removeAttribute('selected');
+        if(opt.value === live.value) opt.setAttribute('selected','');
+      });
+    } else if(target.tagName === 'TEXTAREA'){
+      target.textContent = live.value;
+    } else {
+      target.setAttribute('value', live.value);
+    }
+  });
+  const fileInput = clone.querySelector('#loadDealFile');
+  if(fileInput) fileInput.removeAttribute('value');
+  const name = ($('in_name').value||'').trim();
+  const titleEl = clone.querySelector('title');
+  if(titleEl) titleEl.textContent = name ? (name+' — CLC Deal Screener') : 'CLC Deal Screener';
+  const html = '<!DOCTYPE html>\n' + clone.outerHTML;
+  downloadBlob(dealHtmlFilename(), html, 'text/html');
+}
+
+// wire inputs
+document.querySelectorAll('input,select,textarea').forEach(el=> el.addEventListener('input', recalc));
+initFormattedFields();
+recalc();
+</script>
+</body>
+</html>
