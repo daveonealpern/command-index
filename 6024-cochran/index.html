@@ -271,7 +271,8 @@ html,body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sa
     <div class="sec-hdr"><span class="sec-lbl">PSA &amp; Escrow</span><div class="sec-line"></div></div>
     <div class="card">
       <div id="psa-note" style="display:none;background:var(--gp);border:1px solid var(--gd);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:12px;color:var(--gold)"></div>
-      <div class="met-grid" id="psa-grid"><div class="empty" style="grid-column:1/-1">Loading...</div></div>
+      <div class="met-grid" id="psa-summary-grid" style="margin-bottom:14px"><div class="empty" style="grid-column:1/-1">Loading...</div></div>
+      <a href="../psa-tracker/index.html" class="add-btn" style="text-decoration:none;display:inline-block">Open full PSA Tracker &rarr;</a>
     </div>
   </div>
 
@@ -870,36 +871,54 @@ function removeBudgetNote(id) {
   renderBudgetNotes();
 }
 
-// ── PSA ────────────────────────────────────────────────────────────────────
+// ── PSA (compact summary — full tracker lives at ../psa-tracker/index.html) ─
+function daysFromRaw(v) { return daysFrom(v); }
+const PSA_NEXT_DEADLINES = [
+  'First Deposit Due','Due Diligence Period End','Title Review Deadline',
+  'Second Deposit Due','Closing Date, Final'
+];
 function renderPSA(rows) {
-  const el = document.getElementById('psa-grid');
+  const el = document.getElementById('psa-summary-grid');
   const noteEl = document.getElementById('psa-note');
-  const data={};
-  rows.forEach(r=>{if(r['Field'])data[r['Field'].trim()]=r['Value']||'';});
-  const note=data['Notes'];
-  if (note){noteEl.textContent=note;noteEl.style.display='block';}
-  const fields=[
-    {lbl:'Buyer',key:'Buyer'},
-    {lbl:'Purchase price',key:'Purchase Price',isMoney:true},
-    {lbl:'Execution date',key:'Execution Date',isDate:true},
-    {lbl:'Due diligence deadline',key:'Due Diligence Deadline',isDate:true},
-    {lbl:'Deposit amount',key:'Deposit Amount',isMoney:true},
-    {lbl:'Deposit goes hard',key:'Deposit Hard Date',isDate:true},
-    {lbl:'Close of escrow',key:'Close of Escrow',isDate:true},
-  ];
-  if (!rows.length){el.innerHTML='<div class="empty" style="grid-column:1/-1">No PSA data yet. Add rows to the PSA tab.</div>';return;}
-  el.innerHTML=fields.map(f=>{
-    const raw=data[f.key]||'';
-    let val=raw||'TBD';
-    if (f.isMoney&&raw) val=money(raw,'TBD');
-    if (f.isDate&&raw) val=fmtDate(raw);
-    const days=f.isDate&&raw?daysFrom(raw):null;
-    return `<div class="met">
-      <div class="met-lbl">${f.lbl}</div>
-      <div class="met-val" style="font-size:14px;color:${!raw?'var(--mu)':'var(--txt)'}">${val}</div>
-      ${days!==null&&days>=0?`<div class="met-sub" style="color:${days<=14?'var(--rt)':'var(--mu)'}">${days}d remaining</div>`:''}
+  const data = {};
+  rows.forEach(r => { if (r['Field']) data[r['Field'].trim()] = (r['Value']||'').trim(); });
+
+  const note = data['Notes'];
+  if (note) { noteEl.textContent = note; noteEl.style.display = 'block'; }
+
+  if (!rows.length) { el.innerHTML = '<div class="empty" style="grid-column:1/-1">No PSA data yet.</div>'; return; }
+
+  const effRaw = data['Effective Date'] || '';
+  const effPending = !effRaw || /pending/i.test(effRaw);
+  const effVal = effPending ? 'Pending Buyer signature' : fmtDate(effRaw);
+
+  // Find whichever tracked deadline is soonest and still upcoming
+  let next = null;
+  PSA_NEXT_DEADLINES.forEach(key => {
+    const raw = data[key];
+    if (!raw || /pending/i.test(raw)) return;
+    const d = daysFrom(raw);
+    if (d !== null && d >= 0 && (next === null || d < next.days)) next = { name: key === 'Closing Date, Final' ? 'Closing Date' : key, date: raw, days: d };
+  });
+
+  el.innerHTML = `
+    <div class="met">
+      <div class="met-lbl">Effective Date</div>
+      <div class="met-val" style="font-size:14px;color:${effPending?'var(--mu)':'var(--txt)'}">${effVal}</div>
+    </div>
+    <div class="met">
+      <div class="met-lbl">Next Deadline</div>
+      <div class="met-val" style="font-size:14px">${next ? next.name : '&mdash;'}</div>
+      ${next ? `<div class="met-sub" style="color:${next.days<=7?'var(--rt)':next.days<=14?'var(--yt)':'var(--mu)'}">${fmtDate(next.date)} &middot; ${next.days}d</div>` : '<div class="met-sub">Awaiting Effective Date</div>'}
+    </div>
+    <div class="met">
+      <div class="met-lbl">Total Deposit</div>
+      <div class="met-val" style="font-size:14px;color:var(--gold)">${money(data['Total Deposit'],'TBD')}</div>
+    </div>
+    <div class="met">
+      <div class="met-lbl">Purchase Price</div>
+      <div class="met-val" style="font-size:14px">${money(data['Purchase Price'],'TBD')}</div>
     </div>`;
-  }).join('');
 }
 
 // ── LOAN ────────────────────────────────────────────────────────────────────
